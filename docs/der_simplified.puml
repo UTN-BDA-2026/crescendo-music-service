@@ -1,8 +1,12 @@
 @startdot Simplified ER Diagram
 graph ER {
-    //ENTITIES
+    // Graph setup
     rankdir=LR;
-    
+    fontname="Arial";
+    node [fontname="Arial"];
+    edge [fontname="Arial"];
+
+    //ENTITIES
     User [shape=box];
         u_id [shape=ellipse, label=<<u>id</u>>]; User -- u_id;
         u_username [shape=ellipse, label="username"]; User -- u_username;
