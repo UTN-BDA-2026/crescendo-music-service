@@ -14,6 +14,7 @@ graph ER {
         u_password [shape=ellipse, label="password"]; User -- u_password;
         u_register_date [shape=ellipse, label="registerDate"]; User -- u_register_date;
         u_date_of_birth [shape=ellipse, label="dateOfBirth"]; User -- u_date_of_birth;
+        u_profile_image [shape=ellipse, label="profileImage"]; User -- u_profile_image;
     
     Playlist [shape=box];
         p_id [shape=ellipse, label=<<u>id</u>>]; Playlist -- p_id;
@@ -30,6 +31,8 @@ graph ER {
     
     Album [shape=box];
         al_id [shape=ellipse, label=<<u>id</u>>]; Album -- al_id;
+        al_type [shape=ellipse, label="type"]; Album -- al_type;
+        al_cover_image [shape=ellipse, label="coverImage"]; Album -- al_cover_image;
         al_title [shape=ellipse, label="title"]; Album -- al_title;
         al_release_date [shape=ellipse, label="releaseDate"]; Album -- al_release_date;
     
@@ -37,6 +40,7 @@ graph ER {
         a_id [shape=ellipse, label=<<u>id</u>>]; Artist -- a_id;
         a_name [shape=ellipse, label="name"]; Artist -- a_name;
         a_info [shape=ellipse, label="information"]; Artist -- a_info;
+        a_image [shape=ellipse, label="image"]; Artist -- a_image;
 
     Genre [shape=box];
         g_id [shape=ellipse, label=<<u>id</u>>]; Genre -- g_id;
@@ -48,7 +52,8 @@ graph ER {
         CREATES -- Playlist [label="N"];
 
     CONTAINS [shape=diamond width=1.2, height=1.2];
-        Playlist -- CONTAINS [label="N"] ;
+        Playlist -- CONTAINS [label="N"];
+        pl_position [shape=ellipse, label="trackPosition"]; CONTAINS -- pl_position;
         CONTAINS -- Song [label="N"];
 
     IS_IN [shape=diamond, width=1.2, height=1.2, label="IS IN"];
@@ -56,8 +61,10 @@ graph ER {
         IS_IN -- Album [label="1"];
 
     PERFORMED_BY [shape=diamond, width=1.2, height=1.2, label="PERFORMED BY"];
+        pb_role [shape=ellipse, label="role"]; PERFORMED_BY -- pb_role;
         Song -- PERFORMED_BY [label="N"] ;
         PERFORMED_BY -- Artist [label="N"];
+    
     RELEASES [shape=diamond, width=1.2, height=1.2, label="RELEASES"];
         Artist -- RELEASES [label="N"] ;
         RELEASES -- Album [label="N"];
