@@ -1,0 +1,66 @@
+@startdot Simplified ER Diagram
+graph ER {
+    //ENTITIES
+    rankdir=LR;
+    
+    User [shape=box];
+        u_id [shape=ellipse, label=<<u>id</u>>]; User -- u_id;
+        u_username [shape=ellipse, label="username"]; User -- u_username;
+        u_email [shape=ellipse, label="email"]; User -- u_email;
+        u_password [shape=ellipse, label="password"]; User -- u_password;
+        u_register_date [shape=ellipse, label="registerDate"]; User -- u_register_date;
+        u_date_of_birth [shape=ellipse, label="dateOfBirth"]; User -- u_date_of_birth;
+    
+    Playlist [shape=box];
+        p_id [shape=ellipse, label=<<u>id</u>>]; Playlist -- p_id;
+        p_title [shape=ellipse, label="title"]; Playlist -- p_title;
+        p_description [shape=ellipse, label="description"]; Playlist -- p_description;
+        p_creation_date [shape=ellipse, label="creationDate"]; Playlist -- p_creation_date;
+
+    Song [shape=box];
+        s_id [shape=ellipse, label=<<u>id</u>>]; Song -- s_id;
+        s_title [shape=ellipse, label="title"]; Song -- s_title;
+        s_duration [shape=ellipse, label="duration"]; Song -- s_duration;
+        s_bpm [shape=ellipse, label="bpm"]; Song -- s_bpm;
+        s_release_date [shape=ellipse, label="releaseDate"]; Song -- s_release_date;
+    
+    Album [shape=box];
+        al_id [shape=ellipse, label=<<u>id</u>>]; Album -- al_id;
+        al_title [shape=ellipse, label="title"]; Album -- al_title;
+        al_release_date [shape=ellipse, label="releaseDate"]; Album -- al_release_date;
+    
+    Artist [shape=box];
+        a_id [shape=ellipse, label=<<u>id</u>>]; Artist -- a_id;
+        a_name [shape=ellipse, label="name"]; Artist -- a_name;
+        a_info [shape=ellipse, label="information"]; Artist -- a_info;
+
+    Genre [shape=box];
+        g_id [shape=ellipse, label=<<u>id</u>>]; Genre -- g_id;
+        g_name [shape=ellipse, label="name"]; Genre -- g_name;
+
+    // RELATIONSHIPS
+    CREATES [shape=diamond width=1.2, height=1.2];
+        User -- CREATES [label="1"] ;
+        CREATES -- Playlist [label="N"];
+
+    CONTAINS [shape=diamond width=1.2, height=1.2];
+        Playlist -- CONTAINS [label="N"] ;
+        CONTAINS -- Song [label="N"];
+
+    IS_IN [shape=diamond, width=1.2, height=1.2, label="IS IN"];
+        Song -- IS_IN [label="N"] ;
+        IS_IN -- Album [label="1"];
+
+    PERFORMED_BY [shape=diamond, width=1.2, height=1.2, label="PERFORMED BY"];
+        Song -- PERFORMED_BY [label="N"] ;
+        PERFORMED_BY -- Artist [label="N"];
+
+    BELONGS_TO_GENRE [shape=diamond, width=1.2, height=1.5, label="BELONGS TO"];
+        Song -- BELONGS_TO_GENRE [label="N"] ;
+        BELONGS_TO_GENRE -- Genre [label="1"];
+
+    BELONGS_TO_GENRE_ALBUM [shape=diamond, width=1.2, height=1.5, label="BELONGS TO"];
+        Album -- BELONGS_TO_GENRE_ALBUM [label="N"] ;
+        BELONGS_TO_GENRE_ALBUM -- Genre [label="1"];
+}
+@enddot
