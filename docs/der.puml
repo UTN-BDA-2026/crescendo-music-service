@@ -1,0 +1,48 @@
+@startuml Project DER
+hide circle
+
+left to right direction
+
+entity User {
+    * **id: number**
+    --
+    *username: text
+    *email: text
+    *password_hash: text
+    *register_date: datetime
+    *date_of_birth: date
+    profile_image_url: text
+}
+
+entity Playlist {
+    * **id: number**
+    --
+    *title: text
+    description: text
+    *creation_date: datetime
+    *user_id: number 
+}
+
+'Permitir repetidos
+entity Playlist_Song {
+    * **playlist_id: number**
+    * **track_position:number** 
+    --
+    * song_id: number
+    * added_at: datetime
+}
+
+entity Song {
+    * **id: number**
+    --
+    *title: text
+    *media_url: text
+    duration: number
+    bpm: number
+    release_date: date
+
+}
+
+User::id ||--o{ Playlist::user_id
+Song::id ||--o{ Playlist_Song::song_id
+Playlist::id ||--o{ Playlist_Song::playlist_id
