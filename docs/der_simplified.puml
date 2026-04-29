@@ -58,6 +58,7 @@ graph ER {
 
     IS_IN [shape=diamond, width=1.2, height=1.2, label="IS IN"];
         Song -- IS_IN [label="N"] ;
+        al_position [shape=ellipse, label="trackPosition"]; IS_IN -- al_position;
         IS_IN -- Album [label="1"];
 
     PERFORMED_BY [shape=diamond, width=1.2, height=1.2, label="PERFORMED BY"];
