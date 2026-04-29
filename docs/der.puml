@@ -2,7 +2,6 @@
 hide circle
 
 left to right direction
-
 entity User {
     * **id: number**
     --
@@ -32,17 +31,73 @@ entity Playlist_Song {
     * added_at: datetime
 }
 
+entity Genre {
+    * **id: number**
+    --
+    *name: text
+}
+
 entity Song {
     * **id: number**
     --
     *title: text
     *media_url: text
+    *genre_id:number
     duration: number
     bpm: number
     release_date: date
 
 }
 
+entity Artist_Song {
+    * **song_id: number**
+    * **artist_id:number** 
+    --
+    *role: text
+}
+
+entity Artist {
+    * **id: number**
+    --
+    *name: text
+    information: text
+    image_url: text 
+}
+
+entity Album {
+    * **id: number**
+    --
+    *title: text
+    *type: text
+    *genre_id:number
+    cover_image_url: text
+    release_date: date
+}
+
+entity Album_Song {
+    * **track_position:number** 
+    * **album_id:number**
+    --
+    *song_id: number
+}
+
+entity Album_Artist {
+    * **artist_id:number** 
+    * **album_id:number**
+}
+
 User::id ||--o{ Playlist::user_id
 Song::id ||--o{ Playlist_Song::song_id
 Playlist::id ||--o{ Playlist_Song::playlist_id
+
+Artist::id ||---o{ Artist_Song::artist_id
+Song::id ||---o{ Artist_Song::song_id
+
+Album::id ||---o{ Album_Song::album_id
+Song::id ||---o{ Album_Song::song_id
+
+Album::id ||--o{ Album_Artist::album_id
+Artist::id ||--o{ Album_Artist::artist_id
+
+Genre::id ||--o{ Song::genre_id
+Genre::id ||--o{ Album::genre_id
