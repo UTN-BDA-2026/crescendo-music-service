@@ -15,6 +15,13 @@ El sistema se basa en una arquitectura simple orientada a servicios:
 - Redis para cacheo de consultas frecuentes
 - Docker para contenerización del entorno
 - Traefik como proxy reverso y gestor de tráfico
+
+El servicio estará dividido de la siguiente forma:
+- Servidor: encargado de proveer la informacion y música al usuario. Internamente, trabajaremos con una arquitectura de microservicios:
+    - Backend: trabajará como API entre la base de datos / cache y los usuarios
+    - Streaming: manejara la transmisión de la música 
+- Cliente: vista y reproduccion de la música / playlists
+
 ## Licencia
 Este proyecto está licenciado bajo la GNU GPL v3.0.  Para más detalles, ver el archivo `LICENSE` o visitar https://www.gnu.org/licenses/
 ## Integrantes
