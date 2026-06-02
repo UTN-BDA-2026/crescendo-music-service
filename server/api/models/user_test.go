@@ -1,6 +1,7 @@
-package models
+package models_test
 
 import (
+	"crescendo-api/models"
 	"testing"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 )
 
 func TestCreateUser(t *testing.T) {
-	user := User{
+	user := models.User{
 		Id:                6,
 		Username:          "TestUsername",
 		Email:             "testmail@mail.com",
