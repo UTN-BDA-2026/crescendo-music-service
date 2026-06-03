@@ -10,6 +10,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type DBTX interface {
+	Exec(query string, args ...any) (sql.Result, error)
+	Query(query string, args ...any) (*sql.Rows, error)
+	QueryRow(query string, args ...any) *sql.Row
+}
+
 func NewConnection() (*sql.DB, error) {
 	var err error
 	err = env.Load()

@@ -3,10 +3,10 @@ package models
 import "time"
 
 type User struct {
-	Id                uint
+	Id                int
 	Username          string
 	Email             string
-	PasswordHash      int
+	PasswordHash      string
 	RegisterDate      time.Time
 	DateOfBirth       time.Time
 	ProfilePictureUrl string
