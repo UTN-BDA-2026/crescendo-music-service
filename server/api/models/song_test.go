@@ -12,7 +12,7 @@ func TestCreateSong(t *testing.T) {
 
 	song := models.Song{
 		Id:          1,
-		Title:       "Song title",
+		Title:       "Song Title",
 		FileId:      "0xq2454",
 		GenreId:     4,
 		Duration:    253,
