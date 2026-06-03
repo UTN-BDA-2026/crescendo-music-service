@@ -7,3 +7,11 @@ CREATE TABLE users (
     date_of_birth DATE NOT NULL,
     profile_image_url TEXT
 );
+
+CREATE TABLE playlists (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    user_id INT NOT NULL REFERENCES users(id)
+);
