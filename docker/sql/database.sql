@@ -15,3 +15,8 @@ CREATE TABLE playlists (
     creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INT NOT NULL REFERENCES users(id)
 );
+
+CREATE TABLE genres (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+);
