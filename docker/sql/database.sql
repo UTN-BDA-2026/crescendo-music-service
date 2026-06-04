@@ -30,3 +30,12 @@ CREATE TABLE songs (
 	bpm INT,
 	release_date DATE
 );
+
+CREATE TABLE albums (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+	type TEXT NOT NULL,
+	genre_id INT NOT NULL REFERENCES genres(id),
+    cover_image_url TEXT,
+	release_date DATE
+);
