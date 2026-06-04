@@ -39,3 +39,10 @@ CREATE TABLE albums (
     cover_image_url TEXT,
 	release_date DATE
 );
+
+CREATE TABLE artists (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    information TEXT,
+    image_url TEXT
+);
