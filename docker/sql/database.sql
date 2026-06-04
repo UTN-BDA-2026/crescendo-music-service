@@ -20,3 +20,13 @@ CREATE TABLE genres (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL
 );
+
+CREATE TABLE songs (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+	file_id TEXT NOT NULL,
+	genre_id INT NOT NULL REFERENCES genres(id),
+	duration INT,
+	bpm INT,
+	release_date DATE
+);
