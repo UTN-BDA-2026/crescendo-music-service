@@ -1,7 +1,7 @@
 package database
 
 import (
-	env "crescendo-api/utils"
+	"crescendo-api/config/env"
 	"database/sql"
 	"fmt"
 	"log"

@@ -6,22 +6,27 @@ import (
 	"fmt"
 )
 
-type UserRepository struct {
-	databaseContext database.DBTX
+type UserRepository interface {
+	Create(user models.User) (int, error)
+	GetById(id int) (models.User, error)
+	Update(user models.User) (models.User, error)
+	Delete(id int) error
+}
+
+type userRepository struct {
+	db database.DBTX
 }
 
 func NewUserRepository(db database.DBTX) UserRepository {
-	repository := UserRepository{
-		databaseContext: db,
+	return &userRepository{
+		db: db,
 	}
-
-	return repository
 }
 
-func (r UserRepository) Create(user models.User) (int, error) {
+func (r userRepository) Create(user models.User) (int, error) {
 	var id int
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		INSERT INTO users (
 			username,
 			email,
@@ -44,8 +49,8 @@ func (r UserRepository) Create(user models.User) (int, error) {
 	return id, err
 }
 
-func (r UserRepository) GetById(id int) (models.User, error) {
-	row := r.databaseContext.QueryRow(`
+func (r userRepository) GetById(id int) (models.User, error) {
+	row := r.db.QueryRow(`
 			SELECT id, username, email, password_hash,
 				register_date, date_of_birth, profile_image_url
 			FROM users
@@ -66,10 +71,10 @@ func (r UserRepository) GetById(id int) (models.User, error) {
 	return user, err
 }
 
-func (r UserRepository) Update(user models.User) (models.User, error) {
+func (r userRepository) Update(user models.User) (models.User, error) {
 	var updated models.User
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		UPDATE users
 		SET username = $1,
 			email = $2,
@@ -102,8 +107,8 @@ func (r UserRepository) Update(user models.User) (models.User, error) {
 	return updated, err
 }
 
-func (r UserRepository) Delete(id int) error {
-	result, err := r.databaseContext.Exec(`
+func (r userRepository) Delete(id int) error {
+	result, err := r.db.Exec(`
 		DELETE FROM users
 		WHERE id = $1
 	`, id)
