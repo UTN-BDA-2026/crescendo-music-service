@@ -32,3 +32,22 @@ func (uc *UserController) Register(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "user registered"})
 }
+
+func (uc *UserController) Login(c *gin.Context) {
+	req := mapping.UserLoginDTO{}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid"})
+		return
+	}
+
+	token, err := uc.service.Login(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
+	})
+}

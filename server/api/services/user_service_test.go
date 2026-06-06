@@ -3,6 +3,7 @@ package services_test
 import (
 	"crescendo-api/mapping"
 	"crescendo-api/models"
+	"crescendo-api/security"
 	"crescendo-api/services"
 	"testing"
 	"time"
@@ -109,4 +110,82 @@ func TestCanRegisterUser_InvalidUsername(t *testing.T) {
 
 	check.Error(err)
 	check.Equal(models.User{}, user)
+}
+
+func TestCanUserLogin_ValidUsernameAndPassword(t *testing.T) {
+	check := assert.New(t)
+
+	dto := mapping.UserLoginDTO{
+		Username: "Username",
+		Password: "Password77",
+	}
+	repo := mockUserRepository{
+		getByUsernameOrEmail: func(username, email string) (models.User, error) {
+			passHash, err := security.HashPassword(dto.Password)
+			check.NoError(err)
+			return models.User{
+				Id:           5,
+				Username:     dto.Username,
+				PasswordHash: passHash,
+			}, nil
+		},
+	}
+
+	service := services.NewUserService(repo)
+
+	token, err := service.Login(dto)
+	check.NoError(err)
+	check.NotEmpty(token)
+}
+
+func TestCanUserLogin_ValidEmailAndPassword(t *testing.T) {
+	check := assert.New(t)
+
+	dto := mapping.UserLoginDTO{
+		Email:    "test@mail.com",
+		Password: "Password77",
+	}
+	repo := mockUserRepository{
+		getByUsernameOrEmail: func(username, email string) (models.User, error) {
+			passHash, err := security.HashPassword(dto.Password)
+			check.NoError(err)
+			return models.User{
+				Id:           5,
+				Email:        dto.Email,
+				PasswordHash: passHash,
+			}, nil
+		},
+	}
+
+	service := services.NewUserService(repo)
+
+	token, err := service.Login(dto)
+	check.NoError(err)
+	check.NotEmpty(token)
+}
+
+func TestCanUserLogin_IncorrectPassword(t *testing.T) {
+	check := assert.New(t)
+
+	dto := mapping.UserLoginDTO{
+		Username: "Username",
+		Password: "Password77",
+	}
+	repo := mockUserRepository{
+		getByUsernameOrEmail: func(username, email string) (models.User, error) {
+			passHash, err := security.HashPassword("InvalidPassword6")
+			check.NoError(err)
+			return models.User{
+				Id:           5,
+				Username:     dto.Username,
+				PasswordHash: passHash,
+			}, nil
+		},
+	}
+
+	service := services.NewUserService(repo)
+
+	token, err := service.Login(dto)
+	check.Error(err)
+	check.Empty(token)
 }

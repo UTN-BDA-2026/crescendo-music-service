@@ -137,3 +137,66 @@ func TestUserCRUD(t *testing.T) {
 		check.Zero(deletedUser.Id)
 	})
 }
+
+func TestUserGetByUsernameOrEmail(t *testing.T) {
+
+	db, err := database.NewConnection()
+
+	assert.NoError(t, err)
+
+	t.Cleanup(func() {
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	user := models.User{
+		Username:          "TestUsername",
+		Email:             "testmail@mail.com",
+		PasswordHash:      "0x3556FF",
+		RegisterDate:      time.Date(2024, 4, 23, 14, 30, 45, 0, time.UTC),
+		DateOfBirth:       time.Date(1999, 8, 15, 0, 0, 0, 0, time.UTC),
+		ProfilePictureUrl: "files/grrs.png",
+	}
+	t.Run("Username", func(t *testing.T) {
+		check := assert.New(t)
+
+		transaction, err := db.Begin()
+
+		t.Cleanup(func() {
+			transaction.Rollback()
+		})
+
+		check.NoError(err)
+
+		repository := repositories.NewUserRepository(transaction)
+		refUser := user
+		refUser.Id, err = repository.Create(refUser)
+		check.NoError(err)
+		check.NotEqual(0, refUser.Id)
+		fetchedUser, err := repository.GetByUsernameOrEmail(refUser.Username, "")
+
+		check.NoError(err)
+		check.Equal(refUser, fetchedUser)
+	})
+
+	t.Run("Email", func(t *testing.T) {
+		check := assert.New(t)
+
+		transaction, err := db.Begin()
+
+		t.Cleanup(func() {
+			transaction.Rollback()
+		})
+
+		check.NoError(err)
+
+		repository := repositories.NewUserRepository(transaction)
+		refUser := user
+		refUser.Id, err = repository.Create(refUser)
+		check.NoError(err)
+		check.NotEqual(0, refUser.Id)
+		fetchedUser, err := repository.GetByUsernameOrEmail("", refUser.Email)
+
+		check.NoError(err)
+		check.Equal(refUser, fetchedUser)
+	})
+}
