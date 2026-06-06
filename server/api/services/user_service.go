@@ -12,12 +12,16 @@ import (
 	"unicode"
 )
 
-type UserService struct {
+type UserService interface {
+	Register(mapping.UserRegisterDTO) (models.User, error)
+}
+
+type userService struct {
 	repository repositories.UserRepository
 }
 
 func NewUserService(repository repositories.UserRepository) UserService {
-	service := UserService{
+	service := userService{
 		repository: repository,
 	}
 
@@ -71,7 +75,7 @@ func isValidUsername(username string) bool {
 	return true
 }
 
-func (s UserService) Register(requestDTO mapping.UserRegisterDTO) (models.User, error) {
+func (s userService) Register(requestDTO mapping.UserRegisterDTO) (models.User, error) {
 
 	if !isValidDateOfBirth(requestDTO.DateOfBirth) {
 		return models.User{}, errors.New("invalid date of birth")
