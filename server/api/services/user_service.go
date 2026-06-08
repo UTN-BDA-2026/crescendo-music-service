@@ -147,7 +147,7 @@ func (s userService) Login(loginDTO mapping.UserLoginDTO) (string, error) {
 		return "", errors.New("something went wrong")
 	}
 
-	token, err := security.GenerateToken(user.Id, user.Username)
+	token, err := security.GenerateLoginToken(user.Id, user.Username)
 
 	if err != nil {
 		log.Printf("token generating on login failed: %v", err)
