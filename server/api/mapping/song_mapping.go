@@ -6,16 +6,16 @@ import (
 )
 
 type ArtistLabelDTO struct {
-	Id   string
-	Name string
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type PlaybackDataDTO struct {
-	Id        string
-	Title     string
-	Duration  int
-	StreamURL string
-	Artists   []ArtistLabelDTO
+	Id        string           `json:"id"`
+	Title     string           `json:"title"`
+	Duration  int              `json:"duration"`
+	StreamURL string           `json:"stream_url"`
+	Artists   []ArtistLabelDTO `json:"artists"`
 }
 
 func PlaybackDataToDTO(encoder security.Encoder, data models.PlaybackData) (PlaybackDataDTO, error) {
