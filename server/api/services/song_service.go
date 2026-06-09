@@ -69,10 +69,13 @@ func (s songService) GetSongPlaybackInfo(id int) (models.PlaybackData, error) {
 	)
 
 	return models.PlaybackData{
-		Id:        song.Id,
-		Title:     song.Title,
-		Duration:  song.Duration,
+		SongPreview: models.SongPreview{
+			Id:       song.Id,
+			Title:    song.Title,
+			Duration: song.Duration,
+			Artists:  artists,
+		},
+
 		StreamURL: streamURL,
-		Artists:   artists,
 	}, nil
 }

@@ -21,16 +21,18 @@ type MockSongService struct{}
 
 func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
 	return models.PlaybackData{
-		Id:        4,
-		Title:     "Song Title",
-		StreamURL: "https://example.com/stream",
-		Duration:  125,
-		Artists: []models.ArtistLabel{
-			{
-				Id:   6,
-				Name: "Artist 1",
+		SongPreview: models.SongPreview{
+			Id:       4,
+			Title:    "Song Title",
+			Duration: 125,
+			Artists: []models.ArtistLabel{
+				{
+					Id:   6,
+					Name: "Artist 1",
+				},
 			},
 		},
+		StreamURL: "https://example.com/stream",
 	}, nil
 }
 

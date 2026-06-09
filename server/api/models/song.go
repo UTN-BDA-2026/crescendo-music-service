@@ -12,10 +12,14 @@ type Song struct {
 	ReleaseDate time.Time
 }
 
+type SongPreview struct {
+	Id       int
+	Title    string
+	Duration int
+	Artists  []ArtistLabel
+}
+
 type PlaybackData struct {
-	Id        int
-	Title     string
-	Duration  int
+	SongPreview
 	StreamURL string
-	Artists   []ArtistLabel
 }
