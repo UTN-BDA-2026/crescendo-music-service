@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserCRUD(t *testing.T) {
@@ -30,7 +31,7 @@ func TestUserCRUD(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -55,7 +56,7 @@ func TestUserCRUD(t *testing.T) {
 		check.Equal(expectedUser, createdUser)
 	})
 	t.Run("Read", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -77,7 +78,7 @@ func TestUserCRUD(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -110,7 +111,7 @@ func TestUserCRUD(t *testing.T) {
 		check.NotEqual(refUser.Username, updatedUser.Username)
 	})
 	t.Run("Delete", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -157,7 +158,7 @@ func TestUserGetByUsernameOrEmail(t *testing.T) {
 		ProfilePictureUrl: "files/grrs.png",
 	}
 	t.Run("Username", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -179,7 +180,7 @@ func TestUserGetByUsernameOrEmail(t *testing.T) {
 	})
 
 	t.Run("Email", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 

@@ -4,7 +4,7 @@ import (
 	"crescendo-api/models"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateArtist(t *testing.T) {
@@ -14,7 +14,7 @@ func TestCreateArtist(t *testing.T) {
 		Information: "Description of the artist",
 		ImageUrl:    "a/dfv/gf.png",
 	}
-	check := assert.New(t)
+	check := require.New(t)
 
 	check.Equal(5, artist.Id)
 	check.Equal("ABBA", artist.Name)

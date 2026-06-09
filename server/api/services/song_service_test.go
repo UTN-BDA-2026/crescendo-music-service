@@ -5,11 +5,11 @@ import (
 	"crescendo-api/services"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPlaySong_Success(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	repo := mockSongRepository{
 		getByIdFunc: func(id int) (models.Song, error) {

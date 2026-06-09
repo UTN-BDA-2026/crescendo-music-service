@@ -14,7 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sqids/sqids-go"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MockSongService struct{}
@@ -35,7 +35,7 @@ func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData,
 }
 
 func TestCanProvidSongPlaybackInfo(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 	service := &MockUserService{}
 	sq, err := sqids.New(sqids.Options{
 		Alphabet: os.Getenv("SQID_ALPHABET"),

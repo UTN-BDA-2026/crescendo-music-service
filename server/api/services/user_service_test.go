@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCanRegisterUser_Success(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	userRegisterDTO := mapping.UserRegisterDTO{
 		Username:    "User",
@@ -44,7 +44,7 @@ func TestCanRegisterUser_Success(t *testing.T) {
 }
 
 func TestCanRegisterUser_InvalidPassword(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	repo := mockUserRepository{
 		createFunc: func(user models.User) (int, error) {
@@ -67,7 +67,7 @@ func TestCanRegisterUser_InvalidPassword(t *testing.T) {
 }
 
 func TestCanRegisterUser_InvalidEmail(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	repo := mockUserRepository{
 		createFunc: func(user models.User) (int, error) {
@@ -90,7 +90,7 @@ func TestCanRegisterUser_InvalidEmail(t *testing.T) {
 }
 
 func TestCanRegisterUser_InvalidUsername(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	repo := mockUserRepository{
 		createFunc: func(user models.User) (int, error) {
@@ -113,7 +113,7 @@ func TestCanRegisterUser_InvalidUsername(t *testing.T) {
 }
 
 func TestCanUserLogin_ValidUsernameAndPassword(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	dto := mapping.UserLoginDTO{
 		Username: "Username",
@@ -139,7 +139,7 @@ func TestCanUserLogin_ValidUsernameAndPassword(t *testing.T) {
 }
 
 func TestCanUserLogin_ValidEmailAndPassword(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	dto := mapping.UserLoginDTO{
 		Email:    "test@mail.com",
@@ -165,7 +165,7 @@ func TestCanUserLogin_ValidEmailAndPassword(t *testing.T) {
 }
 
 func TestCanUserLogin_IncorrectPassword(t *testing.T) {
-	check := assert.New(t)
+	check := require.New(t)
 
 	dto := mapping.UserLoginDTO{
 		Username: "Username",

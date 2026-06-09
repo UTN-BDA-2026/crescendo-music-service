@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateSong(t *testing.T) {
@@ -20,7 +20,7 @@ func TestCreateSong(t *testing.T) {
 		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
 	}
 
-	check := assert.New(t)
+	check := require.New(t)
 
 	check.Equal(1, song.Id)
 	check.Equal("Song Title", song.Title)

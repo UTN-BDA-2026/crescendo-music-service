@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenreCRUD(t *testing.T) {
@@ -24,7 +25,7 @@ func TestGenreCRUD(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -49,7 +50,7 @@ func TestGenreCRUD(t *testing.T) {
 		check.Equal(expected, created)
 	})
 	t.Run("Read", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -71,7 +72,7 @@ func TestGenreCRUD(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -104,7 +105,7 @@ func TestGenreCRUD(t *testing.T) {
 		check.NotEqual(reference.Name, updated.Name)
 	})
 	t.Run("Delete", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
