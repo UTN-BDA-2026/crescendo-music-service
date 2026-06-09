@@ -32,7 +32,7 @@ func (m mockUserRepository) GetByUsernameOrEmail(username string, email string) 
 	return m.getByUsernameOrEmail(username, email)
 }
 
-// User Repository Mock
+// Song Repository Mock
 
 type mockSongRepository struct {
 	createFunc                        func(user models.Song) (int, error)
@@ -65,4 +65,64 @@ func (m mockSongRepository) GetArtistsForPlaybackBySongId(id int) ([]models.Arti
 
 func (m mockSongRepository) AddArtistToSong(artistId int, songId int) error {
 	return m.addArtistToSongFunc(artistId, songId)
+}
+
+// Album Repository Mock
+
+type mockAlbumRepository struct {
+	createFunc                     func(user models.Album) (int, error)
+	getByIdFunc                    func(id int) (models.Album, error)
+	updateFunc                     func(user models.Album) (models.Album, error)
+	deleteFunc                     func(id int) error
+	addSongToAlbumFunc             func(songId, albumId, trackPosition int) error
+	getSongsPreviewFromAlbumIdFunc func(id int) ([]models.ListedSong, error)
+}
+
+func (m mockAlbumRepository) Create(album models.Album) (int, error) {
+	return m.createFunc(album)
+}
+
+func (m mockAlbumRepository) GetById(id int) (models.Album, error) {
+	return m.getByIdFunc(id)
+}
+
+func (m mockAlbumRepository) Update(album models.Album) (models.Album, error) {
+	return m.updateFunc(album)
+}
+
+func (m mockAlbumRepository) Delete(id int) error {
+	return m.deleteFunc(id)
+}
+
+func (m mockAlbumRepository) AddSongToAlbum(songId, albumId, trackPosition int) error {
+	return m.addSongToAlbumFunc(songId, albumId, trackPosition)
+}
+
+func (m mockAlbumRepository) GetSongsPreviewFromAlbumId(id int) ([]models.ListedSong, error) {
+	return m.getSongsPreviewFromAlbumIdFunc(id)
+}
+
+// Genre Repository Mock
+
+type mockGenreRepository struct {
+	createFunc  func(genre models.Genre) (int, error)
+	getByIdFunc func(id int) (models.Genre, error)
+	updateFunc  func(genre models.Genre) (models.Genre, error)
+	deleteFunc  func(id int) error
+}
+
+func (m mockGenreRepository) Create(genre models.Genre) (int, error) {
+	return m.createFunc(genre)
+}
+
+func (m mockGenreRepository) GetById(id int) (models.Genre, error) {
+	return m.getByIdFunc(id)
+}
+
+func (m mockGenreRepository) Update(genre models.Genre) (models.Genre, error) {
+	return m.updateFunc(genre)
+}
+
+func (m mockGenreRepository) Delete(id int) error {
+	return m.deleteFunc(id)
 }

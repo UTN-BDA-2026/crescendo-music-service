@@ -53,3 +53,10 @@ CREATE TABLE artists_songs (
     role TEXT,
     PRIMARY KEY(artist_id,song_id)
 );
+
+CREATE TABLE albums_songs (
+    track_position INT,
+    album_id INT NOT NULL REFERENCES albums(id),
+    song_id INT NOT NULL REFERENCES songs(id),
+    PRIMARY KEY (track_position, album_id)
+);

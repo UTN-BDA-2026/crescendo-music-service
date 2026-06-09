@@ -6,19 +6,26 @@ import (
 	"fmt"
 )
 
-type GenreRepository struct {
+type GenreRepository interface {
+	Create(genre models.Genre) (int, error)
+	GetById(id int) (models.Genre, error)
+	Update(genre models.Genre) (models.Genre, error)
+	Delete(id int) error
+}
+
+type genreRepository struct {
 	databaseContext database.DBTX
 }
 
 func NewGenreRepository(db database.DBTX) GenreRepository {
-	repository := GenreRepository{
+	repository := genreRepository{
 		databaseContext: db,
 	}
 
 	return repository
 }
 
-func (r GenreRepository) Create(genre models.Genre) (int, error) {
+func (r genreRepository) Create(genre models.Genre) (int, error) {
 	var id int
 
 	err := r.databaseContext.QueryRow(`
@@ -34,7 +41,7 @@ func (r GenreRepository) Create(genre models.Genre) (int, error) {
 	return id, err
 }
 
-func (r GenreRepository) GetById(id int) (models.Genre, error) {
+func (r genreRepository) GetById(id int) (models.Genre, error) {
 	row := r.databaseContext.QueryRow(`
 			SELECT id, name
 			FROM genres
@@ -48,7 +55,7 @@ func (r GenreRepository) GetById(id int) (models.Genre, error) {
 	return genre, err
 }
 
-func (r GenreRepository) Update(genre models.Genre) (models.Genre, error) {
+func (r genreRepository) Update(genre models.Genre) (models.Genre, error) {
 	var updated models.Genre
 
 	err := r.databaseContext.QueryRow(`
@@ -66,7 +73,7 @@ func (r GenreRepository) Update(genre models.Genre) (models.Genre, error) {
 	return updated, err
 }
 
-func (r GenreRepository) Delete(id int) error {
+func (r genreRepository) Delete(id int) error {
 	result, err := r.databaseContext.Exec(`
 		DELETE FROM genres
 		WHERE id = $1

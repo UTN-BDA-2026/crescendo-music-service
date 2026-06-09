@@ -10,3 +10,13 @@ type Album struct {
 	CoverImageUrl string
 	ReleaseDate   time.Time
 }
+
+type AlbumDetailed struct {
+	Id            int
+	Title         string
+	Type          string
+	Genre         Genre
+	CoverImageUrl string
+	ReleaseDate   time.Time
+	Songs         []ListedSong
+}

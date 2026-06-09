@@ -6,22 +6,29 @@ import (
 	"fmt"
 )
 
-type AlbumRepository struct {
-	databaseContext database.DBTX
+type AlbumRepository interface {
+	Create(user models.Album) (int, error)
+	GetById(id int) (models.Album, error)
+	Update(user models.Album) (models.Album, error)
+	Delete(id int) error
+	AddSongToAlbum(songId int, albumId int, trackPosition int) error
+	GetSongsPreviewFromAlbumId(id int) ([]models.ListedSong, error)
+}
+
+type albumRepository struct {
+	db database.DBTX
 }
 
 func NewAlbumRepository(db database.DBTX) AlbumRepository {
-	repository := AlbumRepository{
-		databaseContext: db,
+	return &albumRepository{
+		db: db,
 	}
-
-	return repository
 }
 
-func (r AlbumRepository) Create(album models.Album) (int, error) {
+func (r albumRepository) Create(album models.Album) (int, error) {
 	var id int
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		INSERT INTO albums (
 			title,
 			type,
@@ -42,8 +49,8 @@ func (r AlbumRepository) Create(album models.Album) (int, error) {
 	return id, err
 }
 
-func (r AlbumRepository) GetById(id int) (models.Album, error) {
-	row := r.databaseContext.QueryRow(`
+func (r albumRepository) GetById(id int) (models.Album, error) {
+	row := r.db.QueryRow(`
 			SELECT 
 				id, 
 				title,
@@ -68,10 +75,10 @@ func (r AlbumRepository) GetById(id int) (models.Album, error) {
 	return album, err
 }
 
-func (r AlbumRepository) Update(album models.Album) (models.Album, error) {
+func (r albumRepository) Update(album models.Album) (models.Album, error) {
 	var updated models.Album
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		UPDATE albums
 		SET title = $1,
 			type = $2,
@@ -101,8 +108,8 @@ func (r AlbumRepository) Update(album models.Album) (models.Album, error) {
 	return updated, err
 }
 
-func (r AlbumRepository) Delete(id int) error {
-	result, err := r.databaseContext.Exec(`
+func (r albumRepository) Delete(id int) error {
+	result, err := r.db.Exec(`
 		DELETE FROM albums
 		WHERE id = $1
 	`, id)
@@ -121,4 +128,96 @@ func (r AlbumRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (r albumRepository) AddSongToAlbum(songId int, albumId int, trackPosition int) error {
+	_, err := r.db.Exec(`
+        INSERT INTO albums_songs (
+            album_id,
+            song_id,
+			track_position
+        )
+        VALUES ($1, $2,$3)
+    `,
+		albumId,
+		songId,
+		trackPosition,
+	)
+
+	return err
+}
+func (r albumRepository) GetSongsPreviewFromAlbumId(albumId int) ([]models.ListedSong, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			s.id,
+			s.title,
+			s.duration,
+			rel.track_position,
+			a.id,
+			a.name
+		FROM albums_songs rel
+		JOIN songs s
+			ON s.id = rel.song_id
+		JOIN artists_songs ars
+			ON ars.song_id = s.id
+		JOIN artists a
+			ON a.id = ars.artist_id
+		WHERE rel.album_id = $1
+		ORDER BY rel.track_position, a.name
+	`, albumId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	songsByID := make(map[int]*models.ListedSong)
+	var orderedSongs []models.ListedSong
+
+	for rows.Next() {
+		var (
+			songID        int
+			title         string
+			duration      int
+			trackPosition int
+			artistID      int
+			artistName    string
+		)
+
+		if err := rows.Scan(
+			&songID,
+			&title,
+			&duration,
+			&trackPosition,
+			&artistID,
+			&artistName,
+		); err != nil {
+			return nil, err
+		}
+
+		song, exists := songsByID[songID]
+		if !exists {
+			orderedSongs = append(orderedSongs, models.ListedSong{
+				SongPreview: models.SongPreview{
+					Id:       songID,
+					Title:    title,
+					Duration: duration,
+				},
+				TrackPosition: trackPosition,
+			})
+
+			song = &orderedSongs[len(orderedSongs)-1]
+			songsByID[songID] = song
+		}
+
+		song.Artists = append(song.Artists, models.ArtistLabel{
+			Id:   artistID,
+			Name: artistName,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orderedSongs, nil
 }

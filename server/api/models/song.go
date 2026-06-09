@@ -23,3 +23,8 @@ type PlaybackData struct {
 	SongPreview
 	StreamURL string
 }
+
+type ListedSong struct {
+	SongPreview
+	TrackPosition int
+}

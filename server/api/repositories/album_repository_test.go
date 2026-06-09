@@ -185,3 +185,88 @@ func TestAlbumCRUD(t *testing.T) {
 		check.Zero(deleted.Id)
 	})
 }
+
+func TestGetSongsPreviewFromAlbumId(t *testing.T) {
+	check := require.New(t)
+
+	db, err := database.NewConnection()
+
+	check.NoError(err)
+
+	transaction, err := db.Begin()
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	check.NoError(err)
+
+	album := models.Album{
+		Title:         "JJ",
+		Type:          "EP",
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+	genre := models.Genre{
+		Name: "Rock",
+	}
+
+	song := models.Song{
+		Title:       "Song Title",
+		FileId:      "0xq2454",
+		Duration:    253,
+		Bpm:         110,
+		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+
+	artist := models.Artist{
+		Name: "Artist 1",
+	}
+
+	listedSong := models.ListedSong{
+		SongPreview: models.SongPreview{
+			Title:    song.Title,
+			Duration: song.Duration,
+			Artists: []models.ArtistLabel{
+				{
+					Name: artist.Name,
+				},
+			},
+		},
+		TrackPosition: 1,
+	}
+
+	albumRepo := repositories.NewAlbumRepository(db)
+	artistRepo := repositories.NewArtistRepository(db)
+	genreRepo := repositories.NewGenreRepository(db)
+	songRepo := repositories.NewSongRepository(db)
+
+	genre.Id, err = genreRepo.Create(genre)
+	check.NoError(err)
+
+	song.GenreId = genre.Id
+	album.GenreId = genre.Id
+
+	song.Id, err = songRepo.Create(song)
+	check.NoError(err)
+	listedSong.Id = song.Id
+
+	album.Id, err = albumRepo.Create(album)
+	check.NoError(err)
+
+	artist.Id, err = artistRepo.Create(artist)
+	check.NoError(err)
+	listedSong.Artists[0].Id = artist.Id
+
+	err = albumRepo.AddSongToAlbum(song.Id, album.Id, listedSong.TrackPosition)
+	check.NoError(err)
+
+	err = songRepo.AddArtistToSong(artist.Id, song.Id)
+
+	songList, err := albumRepo.GetSongsPreviewFromAlbumId(album.Id)
+	check.NoError(err)
+
+	check.Len(songList, 1)
+	check.Equal(listedSong, songList[0])
+}
