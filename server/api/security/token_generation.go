@@ -37,3 +37,31 @@ func GenerateLoginToken(id int, username string) (string, error) {
 
 	return tokenString, nil
 }
+
+func GenerateStreamToken(id int, file_id string) (string, error) {
+	claims := jwt.MapClaims{
+		"song_id": id,
+		"file_id": file_id,
+		"type":    "stream",
+		"exp":     time.Now().Add(3 * time.Hour).Unix(),
+		"iat":     time.Now().Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	err := env.Load()
+	if err != nil {
+		log.Fatalf("Unable to load environmental variables file: %v", err)
+	}
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "", errors.New("jwt secret not configured")
+	}
+
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}

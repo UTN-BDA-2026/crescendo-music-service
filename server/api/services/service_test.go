@@ -2,6 +2,8 @@ package services_test
 
 import "crescendo-api/models"
 
+// User Repository Mock
+
 type mockUserRepository struct {
 	createFunc           func(user models.User) (int, error)
 	getByIdFunc          func(id int) (models.User, error)
@@ -28,4 +30,39 @@ func (m mockUserRepository) Delete(id int) error {
 
 func (m mockUserRepository) GetByUsernameOrEmail(username string, email string) (models.User, error) {
 	return m.getByUsernameOrEmail(username, email)
+}
+
+// User Repository Mock
+
+type mockSongRepository struct {
+	createFunc                        func(user models.Song) (int, error)
+	getByIdFunc                       func(id int) (models.Song, error)
+	updateFunc                        func(user models.Song) (models.Song, error)
+	deleteFunc                        func(id int) error
+	getArtistsForPlaybackBySongIdFunc func(id int) ([]models.ArtistLabel, error)
+	addArtistToSongFunc               func(artistId int, songId int) error
+}
+
+func (m mockSongRepository) Create(song models.Song) (int, error) {
+	return m.createFunc(song)
+}
+
+func (m mockSongRepository) GetById(id int) (models.Song, error) {
+	return m.getByIdFunc(id)
+}
+
+func (m mockSongRepository) Update(song models.Song) (models.Song, error) {
+	return m.updateFunc(song)
+}
+
+func (m mockSongRepository) Delete(id int) error {
+	return m.deleteFunc(id)
+}
+
+func (m mockSongRepository) GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error) {
+	return m.getArtistsForPlaybackBySongIdFunc(id)
+}
+
+func (m mockSongRepository) AddArtistToSong(artistId int, songId int) error {
+	return m.addArtistToSongFunc(artistId, songId)
 }

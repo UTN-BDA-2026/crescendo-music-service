@@ -11,3 +11,11 @@ type Song struct {
 	Bpm         int
 	ReleaseDate time.Time
 }
+
+type PlaybackData struct {
+	Id        int
+	Title     string
+	Duration  int
+	StreamURL string
+	Artists   []ArtistLabel
+}
