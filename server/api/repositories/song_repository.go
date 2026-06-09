@@ -6,22 +6,27 @@ import (
 	"fmt"
 )
 
-type SongRepository struct {
-	databaseContext database.DBTX
+type SongRepository interface {
+	Create(user models.Song) (int, error)
+	GetById(id int) (models.Song, error)
+	Update(user models.Song) (models.Song, error)
+	Delete(id int) error
+}
+
+type songRepository struct {
+	db database.DBTX
 }
 
 func NewSongRepository(db database.DBTX) SongRepository {
-	repository := SongRepository{
-		databaseContext: db,
+	return &songRepository{
+		db: db,
 	}
-
-	return repository
 }
 
-func (r SongRepository) Create(song models.Song) (int, error) {
+func (r songRepository) Create(song models.Song) (int, error) {
 	var id int
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		INSERT INTO songs (
 			title,
 			file_id,
@@ -44,8 +49,8 @@ func (r SongRepository) Create(song models.Song) (int, error) {
 	return id, err
 }
 
-func (r SongRepository) GetById(id int) (models.Song, error) {
-	row := r.databaseContext.QueryRow(`
+func (r songRepository) GetById(id int) (models.Song, error) {
+	row := r.db.QueryRow(`
 			SELECT 
 				id, 
 				title,
@@ -72,10 +77,10 @@ func (r SongRepository) GetById(id int) (models.Song, error) {
 	return song, err
 }
 
-func (r SongRepository) Update(song models.Song) (models.Song, error) {
+func (r songRepository) Update(song models.Song) (models.Song, error) {
 	var updated models.Song
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		UPDATE songs
 		SET title = $1,
 			file_id = $2,
@@ -108,8 +113,8 @@ func (r SongRepository) Update(song models.Song) (models.Song, error) {
 	return updated, err
 }
 
-func (r SongRepository) Delete(id int) error {
-	result, err := r.databaseContext.Exec(`
+func (r songRepository) Delete(id int) error {
+	result, err := r.db.Exec(`
 		DELETE FROM songs
 		WHERE id = $1
 	`, id)
