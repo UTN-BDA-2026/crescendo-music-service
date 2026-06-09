@@ -50,5 +50,6 @@ CREATE TABLE artists (
 CREATE TABLE artists_songs (
     artist_id INT NOT NULL REFERENCES artists(id),
     song_id INT NOT NULL REFERENCES songs(id),
-    role TEXT
+    role TEXT,
+    PRIMARY KEY(artist_id,song_id)
 );
