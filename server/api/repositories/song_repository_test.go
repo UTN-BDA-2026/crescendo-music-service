@@ -185,3 +185,75 @@ func TestSongCRUD(t *testing.T) {
 		check.Zero(deleted.Id)
 	})
 }
+
+func TestSongArtistRelationship(t *testing.T) {
+	db, err := database.NewConnection()
+
+	assert.NoError(t, err)
+
+	t.Cleanup(func() {
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	song := models.Song{
+		Id:          1,
+		Title:       "Song Title",
+		FileId:      "0xq2454",
+		GenreId:     4,
+		Duration:    253,
+		Bpm:         110,
+		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+
+	genre := models.Genre{
+		Name: "Rock",
+	}
+
+	artist_1 := models.Artist{
+		Name:        "ABBA",
+		Information: "Description of the artist 1",
+		ImageUrl:    "a/dfv/gf.png",
+	}
+
+	t.Run("AddSongToArtistAndFetch", func(t *testing.T) {
+		check := assert.New(t)
+
+		transaction, err := db.Begin()
+		check.NoError(err)
+
+		t.Cleanup(func() {
+			transaction.Rollback()
+		})
+
+		genreRepository := repositories.NewGenreRepository(transaction)
+		artistRepository := repositories.NewArtistRepository(transaction)
+		repository := repositories.NewSongRepository(transaction)
+
+		songDB := song
+		artistDB := artist_1
+		genreId, err := genreRepository.Create(genre)
+
+		check.NoError(err)
+		check.NotZero(genreId)
+
+		songDB.GenreId = genreId
+		songDB.Id, err = repository.Create(songDB)
+		check.NoError(err)
+		check.NotZero(songDB.Id)
+
+		artistDB.Id, err = artistRepository.Create(artistDB)
+
+		check.NoError(err)
+		check.NotZero(artistDB.Id)
+
+		err = repository.AddArtistToSong(artistDB.Id, songDB.Id)
+
+		check.NoError(err)
+
+		artistList, err := repository.GetArtistsForPlaybackBySongId(songDB.Id)
+
+		check.NoError(err)
+		check.NotEmpty(artistList)
+		check.Len(artistList, 1)
+	})
+}

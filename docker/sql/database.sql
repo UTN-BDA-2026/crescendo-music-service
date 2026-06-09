@@ -46,3 +46,9 @@ CREATE TABLE artists (
     information TEXT,
     image_url TEXT
 );
+
+CREATE TABLE artists_songs (
+    artist_id INT NOT NULL REFERENCES artists(id),
+    song_id INT NOT NULL REFERENCES songs(id),
+    role TEXT
+);

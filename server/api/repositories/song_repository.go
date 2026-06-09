@@ -11,6 +11,8 @@ type SongRepository interface {
 	GetById(id int) (models.Song, error)
 	Update(user models.Song) (models.Song, error)
 	Delete(id int) error
+	AddArtistToSong(artistId int, songId int) error
+	GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error)
 }
 
 type songRepository struct {
@@ -133,4 +135,57 @@ func (r songRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (r songRepository) AddArtistToSong(artistId int, songId int) error {
+	_, err := r.db.Exec(`
+        INSERT INTO artists_songs (
+            artist_id,
+            song_id
+        )
+        VALUES ($1, $2)
+    `,
+		artistId,
+		songId,
+	)
+
+	return err
+}
+
+func (r songRepository) GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			a.id,
+			a.name
+		FROM artists a
+		JOIN artists_songs rel
+			ON a.id = rel.artist_id
+		WHERE rel.song_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var artists []models.ArtistLabel
+
+	for rows.Next() {
+		var artist models.ArtistLabel
+
+		err := rows.Scan(
+			&artist.Id,
+			&artist.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		artists = append(artists, artist)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return artists, nil
 }
