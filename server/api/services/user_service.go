@@ -147,6 +147,10 @@ func (s userService) Login(loginDTO mapping.UserLoginDTO) (string, error) {
 		return "", errors.New("something went wrong")
 	}
 
+	if !security.VerifyPassword(loginDTO.Password, user.PasswordHash) {
+		return "", errors.New("invalid credentials")
+	}
+
 	token, err := security.GenerateLoginToken(user.Id, user.Username)
 
 	if err != nil {
