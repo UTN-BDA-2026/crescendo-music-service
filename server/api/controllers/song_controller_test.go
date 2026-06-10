@@ -1,9 +1,11 @@
 package controllers_test
 
 import (
+	"crescendo-api/config/app"
 	"crescendo-api/controllers"
 	"crescendo-api/mapping"
 	"crescendo-api/models"
+	"crescendo-api/router"
 	"crescendo-api/security"
 	"encoding/json"
 	"fmt"
@@ -12,7 +14,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sqids/sqids-go"
 	"github.com/stretchr/testify/require"
 )
@@ -43,14 +44,14 @@ func TestCanProvidSongPlaybackInfo(t *testing.T) {
 		Alphabet: os.Getenv("SQID_ALPHABET"),
 	})
 	sqEncoder := security.NewSquidEncoder(sq)
-	controller := controllers.NewSongController(service, sqEncoder)
-	router := gin.Default()
-	router.GET("/songs/:id/playback", controller.GetSongPlaybackInfo)
+	testRouter := router.NewRouter(&app.Container{
+		Song: controllers.NewSongController(service, sqEncoder),
+	})
 	hashedId, err := sq.Encode([]uint64{uint64(4)})
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/songs/%s/playback", hashedId), nil)
 	check.NoError(err)
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	testRouter.ServeHTTP(w, req)
 	check.Equal(http.StatusOK, w.Code)
 	var response mapping.PlaybackDataDTO
 
