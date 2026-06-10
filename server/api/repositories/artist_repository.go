@@ -134,7 +134,7 @@ func (r artistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview,
 			a.release_date
 		FROM albums a
 		JOIN artists_albums rel
-			ON a.id = rel.artist_id
+			ON a.id = rel.album_id
 		WHERE rel.artist_id = $1
 	`, id)
 	if err != nil {
