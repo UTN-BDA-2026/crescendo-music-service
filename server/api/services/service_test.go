@@ -126,3 +126,28 @@ func (m mockGenreRepository) Update(genre models.Genre) (models.Genre, error) {
 func (m mockGenreRepository) Delete(id int) error {
 	return m.deleteFunc(id)
 }
+
+// Artist Repository Mock
+
+type mockArtistRepository struct {
+	createFunc  func(artist models.Artist) (int, error)
+	getByIdFunc func(id int) (models.Artist, error)
+	updateFunc  func(artist models.Artist) (models.Artist, error)
+	deleteFunc  func(id int) error
+}
+
+func (m mockArtistRepository) Create(artist models.Artist) (int, error) {
+	return m.createFunc(artist)
+}
+
+func (m mockArtistRepository) GetById(id int) (models.Artist, error) {
+	return m.getByIdFunc(id)
+}
+
+func (m mockArtistRepository) Update(artist models.Artist) (models.Artist, error) {
+	return m.updateFunc(artist)
+}
+
+func (m mockArtistRepository) Delete(id int) error {
+	return m.deleteFunc(id)
+}
