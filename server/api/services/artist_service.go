@@ -10,6 +10,7 @@ import (
 
 type ArtistService interface {
 	GetArtist(id int) (models.Artist, error)
+	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
 }
 
 type artistService struct {
@@ -41,4 +42,20 @@ func (s artistService) GetArtist(id int) (models.Artist, error) {
 		return models.Artist{}, errors.New("something went wrong")
 	}
 	return artist, nil
+}
+
+func (s artistService) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error) {
+	if id <= 0 {
+		return []models.AlbumPreview{}, errors.New("invalid id")
+	}
+	albums, err := s.repository.GetArtistAlbumPreviews(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []models.AlbumPreview{}, nil
+		}
+
+		log.Printf("fetching albums from artist %v failed: %v", id, err)
+		return []models.AlbumPreview{}, errors.New("something went wrong")
+	}
+	return albums, nil
 }

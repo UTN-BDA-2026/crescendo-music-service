@@ -11,6 +11,8 @@ type ArtistRepository interface {
 	GetById(id int) (models.Artist, error)
 	Update(artist models.Artist) (models.Artist, error)
 	Delete(id int) error
+	AddAlbumToArtist(albumId, artistId int) error
+	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
 }
 
 type artistRepository struct {
@@ -105,4 +107,64 @@ func (r artistRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (r artistRepository) AddAlbumToArtist(albumId, artistId int) error {
+	_, err := r.databaseContext.Exec(`
+        INSERT INTO artists_albums (
+            artist_id,
+            album_id
+        )
+        VALUES ($1, $2)
+    `,
+		artistId,
+		albumId,
+	)
+
+	return err
+}
+
+func (r artistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error) {
+	rows, err := r.databaseContext.Query(`
+		SELECT
+			a.id,
+			a.title,
+			a.type,
+			a.cover_image_url,
+			a.release_date
+		FROM albums a
+		JOIN artists_albums rel
+			ON a.id = rel.artist_id
+		WHERE rel.artist_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var albums []models.AlbumPreview
+
+	for rows.Next() {
+		var album models.AlbumPreview
+
+		err := rows.Scan(
+			&album.Id,
+			&album.Title,
+			&album.Type,
+			&album.CoverImageUrl,
+			&album.ReleaseDate,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		album.ReleaseDate = album.ReleaseDate.UTC()
+		albums = append(albums, album)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return albums, nil
 }

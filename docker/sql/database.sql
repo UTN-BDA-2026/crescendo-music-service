@@ -60,3 +60,9 @@ CREATE TABLE albums_songs (
     song_id INT NOT NULL REFERENCES songs(id),
     PRIMARY KEY (track_position, album_id)
 );
+
+CREATE TABLE artists_albums (
+    artist_id INT NOT NULL REFERENCES artists(id),
+    album_id INT NOT NULL REFERENCES albums(id),
+    PRIMARY KEY(artist_id,album_id)
+);

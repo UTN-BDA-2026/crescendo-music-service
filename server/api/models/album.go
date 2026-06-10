@@ -20,3 +20,11 @@ type AlbumDetailed struct {
 	ReleaseDate   time.Time
 	Songs         []ListedSong
 }
+
+type AlbumPreview struct {
+	Id            int
+	Title         string
+	Type          string
+	CoverImageUrl string
+	ReleaseDate   time.Time
+}

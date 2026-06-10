@@ -130,10 +130,12 @@ func (m mockGenreRepository) Delete(id int) error {
 // Artist Repository Mock
 
 type mockArtistRepository struct {
-	createFunc  func(artist models.Artist) (int, error)
-	getByIdFunc func(id int) (models.Artist, error)
-	updateFunc  func(artist models.Artist) (models.Artist, error)
-	deleteFunc  func(id int) error
+	createFunc                     func(artist models.Artist) (int, error)
+	getByIdFunc                    func(id int) (models.Artist, error)
+	updateFunc                     func(artist models.Artist) (models.Artist, error)
+	deleteFunc                     func(id int) error
+	addAlbumToArtistFunc           func(albumId, artistId int) error
+	getAlbumPreviewsByArtistIdFunc func(id int) ([]models.AlbumPreview, error)
 }
 
 func (m mockArtistRepository) Create(artist models.Artist) (int, error) {
@@ -150,4 +152,12 @@ func (m mockArtistRepository) Update(artist models.Artist) (models.Artist, error
 
 func (m mockArtistRepository) Delete(id int) error {
 	return m.deleteFunc(id)
+}
+
+func (m mockArtistRepository) AddAlbumToArtist(albumId, artistId int) error {
+	return m.addAlbumToArtistFunc(albumId, artistId)
+}
+
+func (m mockArtistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error) {
+	return m.getAlbumPreviewsByArtistIdFunc(id)
 }

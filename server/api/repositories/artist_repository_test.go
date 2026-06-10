@@ -5,6 +5,7 @@ import (
 	"crescendo-api/models"
 	"crescendo-api/repositories"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -134,4 +135,69 @@ func TestArtistCRUD(t *testing.T) {
 		check.Error(err)
 		check.Zero(deleted.Id)
 	})
+}
+
+func TestArtistAlbumRelation(t *testing.T) {
+	check := require.New(t)
+
+	db, err := database.NewConnection()
+
+	check.NoError(err)
+
+	transaction, err := db.Begin()
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	check.NoError(err)
+
+	artist := models.Artist{
+		Name:        "ABBA",
+		Information: "Description of the artist",
+		ImageUrl:    "a/dfv/gf.png",
+	}
+	album := models.Album{
+		Title:         "JJ",
+		Type:          "EP",
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+	genre := models.Genre{
+		Name: "Rock",
+	}
+
+	repository := repositories.NewArtistRepository(db)
+	albumRepo := repositories.NewAlbumRepository(db)
+	genreRepo := repositories.NewGenreRepository(db)
+
+	artist.Id, err = repository.Create(artist)
+	check.NoError(err)
+
+	genre.Id, err = genreRepo.Create(genre)
+	check.NoError(err)
+
+	album.GenreId = genre.Id
+	album.Id, err = albumRepo.Create(album)
+	check.NoError(err)
+
+	err = repository.AddAlbumToArtist(album.Id, artist.Id)
+	check.NoError(err)
+
+	expected := []models.AlbumPreview{
+		{
+			Id:            album.Id,
+			Title:         album.Title,
+			Type:          album.Type,
+			CoverImageUrl: album.CoverImageUrl,
+			ReleaseDate:   album.ReleaseDate,
+		},
+	}
+
+	fetchedAlbums, err := repository.GetArtistAlbumPreviews(artist.Id)
+
+	check.NoError(err)
+	check.Len(fetchedAlbums, len(expected))
+	check.Equal(expected[0], fetchedAlbums[0])
 }
