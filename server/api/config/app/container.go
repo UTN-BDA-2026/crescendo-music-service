@@ -12,8 +12,9 @@ import (
 )
 
 type Container struct {
-	User *controllers.UserController
-	Song *controllers.SongController
+	User  *controllers.UserController
+	Song  *controllers.SongController
+	Album *controllers.AlbumController
 }
 
 func NewContainer(db database.DBTX) *Container {
@@ -26,10 +27,17 @@ func NewContainer(db database.DBTX) *Container {
 	sq, _ := sqids.New(sqids.Options{
 		Alphabet: os.Getenv("SQID_ALPHABET"),
 	})
-	songEncoder := security.NewSquidEncoder(sq)
-	songController := controllers.NewSongController(songService, songEncoder)
+	idEncoder := security.NewSquidEncoder(sq)
+	songController := controllers.NewSongController(songService, idEncoder)
+
+	albumRepo := repositories.NewAlbumRepository(db)
+	genreRepo := repositories.NewGenreRepository(db)
+	albumService := services.NewAlbumService(albumRepo, genreRepo)
+	albumController := controllers.NewAlbumController(albumService, idEncoder)
+
 	return &Container{
-		User: userController,
-		Song: songController,
+		User:  userController,
+		Song:  songController,
+		Album: albumController,
 	}
 }

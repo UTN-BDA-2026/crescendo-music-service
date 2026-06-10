@@ -21,5 +21,7 @@ func NewRouter(container *app.Container) *gin.Engine {
 
 	router.GET("/songs/:id/playback", container.Song.GetSongPlaybackInfo)
 
+	router.GET("/albums/:id", container.Album.GetAlbumDetails)
+
 	return router
 }

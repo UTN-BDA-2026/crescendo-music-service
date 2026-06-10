@@ -47,3 +47,11 @@ func PlaybackDataToDTO(encoder security.Encoder, data models.PlaybackData) (Play
 		Artists:   artistsDTO,
 	}, nil
 }
+
+type ListedSongDTO struct {
+	Id            string           `json:"id"`
+	Title         string           `json:"title"`
+	Duration      int              `json:"duration"`
+	Artists       []ArtistLabelDTO `json:"artists"`
+	TrackPosition int              `json:"track_position"`
+}
