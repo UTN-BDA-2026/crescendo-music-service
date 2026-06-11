@@ -13,6 +13,7 @@ type ArtistRepository interface {
 	Delete(id int) error
 	AddAlbumToArtist(albumId, artistId int) error
 	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
+	GetArtistSongPreviews(id int) ([]models.SongPreview, error)
 }
 
 type artistRepository struct {
@@ -167,4 +168,44 @@ func (r artistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview,
 	}
 
 	return albums, nil
+}
+
+func (r artistRepository) GetArtistSongPreviews(id int) ([]models.SongPreview, error) {
+	rows, err := r.databaseContext.Query(`
+		SELECT
+			s.id,
+			s.title,
+			s.duration
+		FROM songs s
+		JOIN artists_songs rel
+			ON s.id = rel.song_id
+		WHERE rel.artist_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var songs []models.SongPreview
+
+	for rows.Next() {
+		var song models.SongPreview
+
+		err := rows.Scan(
+			&song.Id,
+			&song.Title,
+			&song.Duration,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		songs = append(songs, song)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return songs, nil
 }

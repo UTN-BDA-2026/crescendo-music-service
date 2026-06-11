@@ -66,3 +66,36 @@ func TestGetArtistAlbums(t *testing.T) {
 	check.Equal(referenceAlbums, fetchedAlbums)
 
 }
+
+func TestGetArtistSongPreviews(t *testing.T) {
+	check := require.New(t)
+	artistId := 5
+
+	referenceSongs := []models.SongPreview{
+		{
+			Id:       4,
+			Title:    "Song 1",
+			Duration: 123,
+		},
+		{
+			Id:       8,
+			Title:    "Song 2",
+			Duration: 345,
+		},
+	}
+
+	repo := mockArtistRepository{
+		getArtistSongPreviewsFunc: func(id int) ([]models.SongPreview, error) {
+			return referenceSongs, nil
+		},
+	}
+
+	service := services.NewArtistService(repo)
+
+	fetchedSongs, err := service.GetArtistSongPreviews(artistId)
+
+	check.NoError(err)
+	check.Len(fetchedSongs, len(referenceSongs))
+	check.Equal(referenceSongs, fetchedSongs)
+
+}

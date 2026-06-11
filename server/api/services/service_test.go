@@ -136,6 +136,7 @@ type mockArtistRepository struct {
 	deleteFunc                     func(id int) error
 	addAlbumToArtistFunc           func(albumId, artistId int) error
 	getAlbumPreviewsByArtistIdFunc func(id int) ([]models.AlbumPreview, error)
+	getArtistSongPreviewsFunc      func(id int) ([]models.SongPreview, error)
 }
 
 func (m mockArtistRepository) Create(artist models.Artist) (int, error) {
@@ -160,4 +161,8 @@ func (m mockArtistRepository) AddAlbumToArtist(albumId, artistId int) error {
 
 func (m mockArtistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error) {
 	return m.getAlbumPreviewsByArtistIdFunc(id)
+}
+
+func (m mockArtistRepository) GetArtistSongPreviews(id int) ([]models.SongPreview, error) {
+	return m.getArtistSongPreviewsFunc(id)
 }

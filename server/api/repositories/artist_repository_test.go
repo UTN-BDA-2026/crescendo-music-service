@@ -201,3 +201,68 @@ func TestArtistAlbumRelation(t *testing.T) {
 	check.Len(fetchedAlbums, len(expected))
 	check.Equal(expected[0], fetchedAlbums[0])
 }
+
+func TestArtistSongRelation(t *testing.T) {
+	check := require.New(t)
+
+	db, err := database.NewConnection()
+
+	check.NoError(err)
+
+	transaction, err := db.Begin()
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	check.NoError(err)
+
+	artist := models.Artist{
+		Name:        "ABBA",
+		Information: "Description of the artist",
+		ImageUrl:    "a/dfv/gf.png",
+	}
+	song := models.Song{
+		Title:       "Song Title 1",
+		FileId:      "0xq2454e",
+		Duration:    253,
+		Bpm:         110,
+		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+	genre := models.Genre{
+		Name: "Rock",
+	}
+
+	repository := repositories.NewArtistRepository(transaction)
+	songRepo := repositories.NewSongRepository(transaction)
+	genreRepo := repositories.NewGenreRepository(transaction)
+
+	artist.Id, err = repository.Create(artist)
+	check.NoError(err)
+
+	genre.Id, err = genreRepo.Create(genre)
+	check.NoError(err)
+
+	song.GenreId = genre.Id
+
+	song.Id, err = songRepo.Create(song)
+	check.NoError(err)
+
+	err = songRepo.AddArtistToSong(artist.Id, song.Id)
+	check.NoError(err)
+
+	expected := []models.SongPreview{
+		{
+			Id:       song.Id,
+			Title:    song.Title,
+			Duration: song.Duration,
+		},
+	}
+
+	fetchedSongs, err := repository.GetArtistSongPreviews(artist.Id)
+
+	check.NoError(err)
+	check.Len(fetchedSongs, len(expected))
+	check.Equal(expected[0], fetchedSongs[0])
+}
