@@ -168,9 +168,9 @@ func TestArtistAlbumRelation(t *testing.T) {
 		Name: "Rock",
 	}
 
-	repository := repositories.NewArtistRepository(db)
-	albumRepo := repositories.NewAlbumRepository(db)
-	genreRepo := repositories.NewGenreRepository(db)
+	repository := repositories.NewArtistRepository(transaction)
+	albumRepo := repositories.NewAlbumRepository(transaction)
+	genreRepo := repositories.NewGenreRepository(transaction)
 
 	artist.Id, err = repository.Create(artist)
 	check.NoError(err)

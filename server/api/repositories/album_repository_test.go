@@ -237,10 +237,10 @@ func TestGetSongsPreviewFromAlbumId(t *testing.T) {
 		TrackPosition: 1,
 	}
 
-	albumRepo := repositories.NewAlbumRepository(db)
-	artistRepo := repositories.NewArtistRepository(db)
-	genreRepo := repositories.NewGenreRepository(db)
-	songRepo := repositories.NewSongRepository(db)
+	albumRepo := repositories.NewAlbumRepository(transaction)
+	artistRepo := repositories.NewArtistRepository(transaction)
+	genreRepo := repositories.NewGenreRepository(transaction)
+	songRepo := repositories.NewSongRepository(transaction)
 
 	genre.Id, err = genreRepo.Create(genre)
 	check.NoError(err)
