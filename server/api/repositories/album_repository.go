@@ -197,7 +197,7 @@ func (r albumRepository) GetSongsPreviewFromAlbumId(albumId int) ([]models.Liste
 		song, exists := songsByID[songID]
 		if !exists {
 			orderedSongs = append(orderedSongs, models.ListedSong{
-				SongPreview: models.SongPreview{
+				SongPreviewWithArtists: models.SongPreviewWithArtists{
 					Id:       songID,
 					Title:    title,
 					Duration: duration,

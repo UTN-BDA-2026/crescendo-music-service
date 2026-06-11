@@ -14,7 +14,7 @@ func TestGetAlbumDetails(t *testing.T) {
 
 	expectedSongs := []models.ListedSong{
 		{
-			SongPreview: models.SongPreview{
+			SongPreviewWithArtists: models.SongPreviewWithArtists{
 				Id:       7,
 				Title:    "Song 1",
 				Duration: 125,

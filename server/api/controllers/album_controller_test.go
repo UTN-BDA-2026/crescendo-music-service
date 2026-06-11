@@ -34,7 +34,7 @@ func (m *MockAlbumService) GetAlbumDetails(id int) (models.AlbumDetailed, error)
 		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
 		Songs: []models.ListedSong{
 			{
-				SongPreview: models.SongPreview{
+				SongPreviewWithArtists: models.SongPreviewWithArtists{
 					Id:       1,
 					Title:    "Song Title",
 					Duration: 344,

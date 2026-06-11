@@ -69,7 +69,7 @@ func (s songService) GetSongPlaybackInfo(id int) (models.PlaybackData, error) {
 	)
 
 	return models.PlaybackData{
-		SongPreview: models.SongPreview{
+		SongPreviewWithArtists: models.SongPreviewWithArtists{
 			Id:       song.Id,
 			Title:    song.Title,
 			Duration: song.Duration,

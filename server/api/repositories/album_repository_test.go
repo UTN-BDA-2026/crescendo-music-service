@@ -225,7 +225,7 @@ func TestGetSongsPreviewFromAlbumId(t *testing.T) {
 	}
 
 	listedSong := models.ListedSong{
-		SongPreview: models.SongPreview{
+		SongPreviewWithArtists: models.SongPreviewWithArtists{
 			Title:    song.Title,
 			Duration: song.Duration,
 			Artists: []models.ArtistLabel{

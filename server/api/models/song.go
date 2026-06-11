@@ -12,7 +12,7 @@ type Song struct {
 	ReleaseDate time.Time
 }
 
-type SongPreview struct {
+type SongPreviewWithArtists struct {
 	Id       int
 	Title    string
 	Duration int
@@ -20,11 +20,11 @@ type SongPreview struct {
 }
 
 type PlaybackData struct {
-	SongPreview
+	SongPreviewWithArtists
 	StreamURL string
 }
 
 type ListedSong struct {
-	SongPreview
+	SongPreviewWithArtists
 	TrackPosition int
 }
