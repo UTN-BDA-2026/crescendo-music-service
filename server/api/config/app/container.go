@@ -12,9 +12,10 @@ import (
 )
 
 type Container struct {
-	User  *controllers.UserController
-	Song  *controllers.SongController
-	Album *controllers.AlbumController
+	User   *controllers.UserController
+	Song   *controllers.SongController
+	Album  *controllers.AlbumController
+	Artist *controllers.ArtistController
 }
 
 func NewContainer(db database.DBTX) *Container {
@@ -36,9 +37,14 @@ func NewContainer(db database.DBTX) *Container {
 	albumService := services.NewAlbumService(albumRepo, genreRepo)
 	albumController := controllers.NewAlbumController(albumService, idEncoder)
 
+	artistRepo := repositories.NewArtistRepository(db)
+	artistService := services.NewArtistService(artistRepo)
+	artistController := controllers.NewArtistController(artistService, idEncoder)
+
 	return &Container{
-		User:  userController,
-		Song:  songController,
-		Album: albumController,
+		User:   userController,
+		Song:   songController,
+		Album:  albumController,
+		Artist: artistController,
 	}
 }

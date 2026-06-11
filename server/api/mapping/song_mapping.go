@@ -5,6 +5,28 @@ import (
 	"crescendo-api/security"
 )
 
+type SongPreviewDTO struct {
+	Id       string `json:"id"`
+	Title    string `json:"title"`
+	Duration int    `json:"duration"`
+}
+
+func SongPreviewListToDTO(encoder security.Encoder, list []models.SongPreview) ([]SongPreviewDTO, error) {
+	var songsDTO []SongPreviewDTO
+	for _, song := range list {
+		hashedId, err := encoder.Encode(song.Id)
+		if err != nil {
+			return []SongPreviewDTO{}, nil
+		}
+		songsDTO = append(songsDTO, SongPreviewDTO{
+			Id:       hashedId,
+			Title:    song.Title,
+			Duration: song.Duration,
+		})
+	}
+	return songsDTO, nil
+}
+
 type ArtistLabelDTO struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`

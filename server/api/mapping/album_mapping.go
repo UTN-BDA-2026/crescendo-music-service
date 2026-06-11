@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+type AlbumPreviewDTO struct {
+	Id            string    `json:"id"`
+	Title         string    `json:"title"`
+	Type          string    `json:"type"`
+	CoverImageUrl string    `json:"cover_image_url"`
+	ReleaseDate   time.Time `json:"release_date"`
+}
+
 type AlbumDetailedDTO struct {
 	Id            string          `json:"id"`
 	Title         string          `json:"title"`
@@ -14,6 +22,24 @@ type AlbumDetailedDTO struct {
 	CoverImageUrl string          `json:"cover_image_url"`
 	ReleaseDate   time.Time       `json:"release_date"`
 	Songs         []ListedSongDTO `json:"songs"`
+}
+
+func AlbumPreviewListToDTO(encoder security.Encoder, list []models.AlbumPreview) ([]AlbumPreviewDTO, error) {
+	var albumsDTO []AlbumPreviewDTO
+	for _, album := range list {
+		hashedId, err := encoder.Encode(album.Id)
+		if err != nil {
+			return []AlbumPreviewDTO{}, nil
+		}
+		albumsDTO = append(albumsDTO, AlbumPreviewDTO{
+			Id:            hashedId,
+			Title:         album.Title,
+			Type:          album.Type,
+			CoverImageUrl: album.CoverImageUrl,
+			ReleaseDate:   album.ReleaseDate,
+		})
+	}
+	return albumsDTO, nil
 }
 
 func AlbumDetailedToDTO(encoder security.Encoder, data models.AlbumDetailed) (AlbumDetailedDTO, error) {
