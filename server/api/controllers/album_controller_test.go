@@ -54,7 +54,8 @@ func TestCanProvideAlbumDetails(t *testing.T) {
 	check := require.New(t)
 	service := &MockAlbumService{}
 	sq, err := sqids.New(sqids.Options{
-		Alphabet: os.Getenv("SQID_ALPHABET"),
+		Alphabet:  os.Getenv("SQID_ALPHABET"),
+		MinLength: 6,
 	})
 	sqEncoder := security.NewSquidEncoder(sq)
 

@@ -25,7 +25,8 @@ func NewContainer(db database.DBTX) *Container {
 	songRepo := repositories.NewSongRepository(db)
 	songService := services.NewSongService(songRepo)
 	sq, _ := sqids.New(sqids.Options{
-		Alphabet: os.Getenv("SQID_ALPHABET"),
+		Alphabet:  os.Getenv("SQID_ALPHABET"),
+		MinLength: 6,
 	})
 	idEncoder := security.NewSquidEncoder(sq)
 	songController := controllers.NewSongController(songService, idEncoder)
