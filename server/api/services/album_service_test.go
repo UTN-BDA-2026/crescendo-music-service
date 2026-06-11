@@ -25,7 +25,7 @@ func TestGetAlbumDetails(t *testing.T) {
 			TrackPosition: 1,
 		},
 		{
-			SongPreview: models.SongPreview{
+			SongPreviewWithArtists: models.SongPreviewWithArtists{
 				Id:       7,
 				Title:    "Song 2",
 				Duration: 653,
@@ -36,7 +36,7 @@ func TestGetAlbumDetails(t *testing.T) {
 			TrackPosition: 1,
 		},
 		{
-			SongPreview: models.SongPreview{
+			SongPreviewWithArtists: models.SongPreviewWithArtists{
 				Id:       2,
 				Title:    "Song 3",
 				Duration: 222,
