@@ -1,7 +1,6 @@
 name: crescensdo-music-service
 services:
     postgresql:
-        container_name: postgresql-servidor
         image: postgres:15.4-bullseye
         ports:
             - "5433:5432"
@@ -13,8 +12,37 @@ services:
         volumes:
             - ./sql:/docker-entrypoint-initdb.d
         restart: always
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
         labels:
             - "traefik.enable=true"
             - "traefik.tcp.routers.postgresql.rule=HostSNI(`*`)"
             - "traefik.tcp.routers.postgresql.entrypoints=postgresql"
             - "traefik.tcp.services.postgresql.loadbalancer.server.port=5432"
+    sysacad:
+        image: crescendo-api:1.0.0
+        ports:
+            - "8080:8080"
+        environment:
+            - ENV=CONTAINER
+            - POSTGRES_HOST=${POSTGRES_HOST}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PORT=${POSTGRES_PORT}
+            - SQID_ALPHABET=${SQID_ALPHABET}
+            - JWT_SECRET=${JWT_SECRET}
+            - BASE_URL=${BASE_URL}
+        depends_on:
+            postgresql:
+                condition: service_healthy
+        labels:
+            - "traefik.enable=true"
+            - "traefik.enable=true"
+            - "traefik.http.routers.sysacad.rule=Host(`crescensdo.api.localhost`)"
+            - "traefik.http.routers.sysacad.tls=true"
+            - "traefik.http.services.sysacad.loadbalancer.server.port=8080"
+            - "traefik.docker.network=sysacad-net"    
