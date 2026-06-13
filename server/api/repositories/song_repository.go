@@ -6,22 +6,29 @@ import (
 	"fmt"
 )
 
-type SongRepository struct {
-	databaseContext database.DBTX
+type SongRepository interface {
+	Create(user models.Song) (int, error)
+	GetById(id int) (models.Song, error)
+	Update(user models.Song) (models.Song, error)
+	Delete(id int) error
+	AddArtistToSong(artistId int, songId int) error
+	GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error)
+}
+
+type songRepository struct {
+	db database.DBTX
 }
 
 func NewSongRepository(db database.DBTX) SongRepository {
-	repository := SongRepository{
-		databaseContext: db,
+	return &songRepository{
+		db: db,
 	}
-
-	return repository
 }
 
-func (r SongRepository) Create(song models.Song) (int, error) {
+func (r songRepository) Create(song models.Song) (int, error) {
 	var id int
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		INSERT INTO songs (
 			title,
 			file_id,
@@ -44,8 +51,8 @@ func (r SongRepository) Create(song models.Song) (int, error) {
 	return id, err
 }
 
-func (r SongRepository) GetById(id int) (models.Song, error) {
-	row := r.databaseContext.QueryRow(`
+func (r songRepository) GetById(id int) (models.Song, error) {
+	row := r.db.QueryRow(`
 			SELECT 
 				id, 
 				title,
@@ -72,10 +79,10 @@ func (r SongRepository) GetById(id int) (models.Song, error) {
 	return song, err
 }
 
-func (r SongRepository) Update(song models.Song) (models.Song, error) {
+func (r songRepository) Update(song models.Song) (models.Song, error) {
 	var updated models.Song
 
-	err := r.databaseContext.QueryRow(`
+	err := r.db.QueryRow(`
 		UPDATE songs
 		SET title = $1,
 			file_id = $2,
@@ -108,8 +115,8 @@ func (r SongRepository) Update(song models.Song) (models.Song, error) {
 	return updated, err
 }
 
-func (r SongRepository) Delete(id int) error {
-	result, err := r.databaseContext.Exec(`
+func (r songRepository) Delete(id int) error {
+	result, err := r.db.Exec(`
 		DELETE FROM songs
 		WHERE id = $1
 	`, id)
@@ -128,4 +135,57 @@ func (r SongRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (r songRepository) AddArtistToSong(artistId int, songId int) error {
+	_, err := r.db.Exec(`
+        INSERT INTO artists_songs (
+            artist_id,
+            song_id
+        )
+        VALUES ($1, $2)
+    `,
+		artistId,
+		songId,
+	)
+
+	return err
+}
+
+func (r songRepository) GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			a.id,
+			a.name
+		FROM artists a
+		JOIN artists_songs rel
+			ON a.id = rel.artist_id
+		WHERE rel.song_id = $1
+	`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var artists []models.ArtistLabel
+
+	for rows.Next() {
+		var artist models.ArtistLabel
+
+		err := rows.Scan(
+			&artist.Id,
+			&artist.Name,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		artists = append(artists, artist)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return artists, nil
 }

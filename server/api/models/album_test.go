@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateAlbum(t *testing.T) {
@@ -18,7 +18,7 @@ func TestCreateAlbum(t *testing.T) {
 		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
 	}
 
-	check := assert.New(t)
+	check := require.New(t)
 	check.Equal(8, album.Id)
 	check.Equal("JJ", album.Title)
 	check.Equal("EP", album.Type)

@@ -46,3 +46,35 @@ CREATE TABLE artists (
     information TEXT,
     image_url TEXT
 );
+
+CREATE TABLE artists_songs (
+    artist_id INT NOT NULL REFERENCES artists(id),
+    song_id INT NOT NULL REFERENCES songs(id),
+    role TEXT,
+    PRIMARY KEY(artist_id,song_id)
+);
+
+CREATE TABLE albums_songs (
+    track_position INT,
+    album_id INT NOT NULL REFERENCES albums(id),
+    song_id INT NOT NULL REFERENCES songs(id),
+    PRIMARY KEY (track_position, album_id)
+);
+
+CREATE TABLE artists_albums (
+    artist_id INT NOT NULL REFERENCES artists(id),
+    album_id INT NOT NULL REFERENCES albums(id),
+    PRIMARY KEY(artist_id,album_id)
+);
+
+CREATE INDEX idx_playlists_user_id
+ON playlists(user_id);
+
+CREATE INDEX idx_artists_songs_song_id
+ON artists_songs(song_id);
+
+CREATE INDEX idx_artists_songs_artist_id
+ON artists_songs(artist_id);
+
+CREATE INDEX idx_artists_albums_artist_id
+ON artists_albums(artist_id);

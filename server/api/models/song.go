@@ -11,3 +11,26 @@ type Song struct {
 	Bpm         int
 	ReleaseDate time.Time
 }
+
+type SongPreview struct {
+	Id       int
+	Title    string
+	Duration int
+}
+
+type SongPreviewWithArtists struct {
+	Id       int
+	Title    string
+	Duration int
+	Artists  []ArtistLabel
+}
+
+type PlaybackData struct {
+	SongPreviewWithArtists
+	StreamURL string
+}
+
+type ListedSong struct {
+	SongPreviewWithArtists
+	TrackPosition int
+}
