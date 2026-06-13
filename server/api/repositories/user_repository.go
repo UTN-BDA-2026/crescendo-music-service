@@ -9,6 +9,7 @@ import (
 type UserRepository interface {
 	Create(user models.User) (int, error)
 	GetById(id int) (models.User, error)
+	GetByUsernameOrEmail(username, email string) (models.User, error)
 	Update(user models.User) (models.User, error)
 	Delete(id int) error
 }
@@ -127,4 +128,9 @@ func (r userRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+func (r userRepository) GetByUsernameOrEmail(username, email string) (models.User, error) {
+	// TODO: Implementar la query real de SQL @CodeR4nger
+	return models.User{}, nil
 }

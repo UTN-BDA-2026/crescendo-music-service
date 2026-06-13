@@ -5,10 +5,11 @@ import "crescendo-api/models"
 // User Repository Mock
 
 type mockUserRepository struct {
-	createFunc  func(user models.User) (int, error)
-	getByIdFunc func(id int) (models.User, error)
-	updateFunc  func(user models.User) (models.User, error)
-	deleteFunc  func(id int) error
+	createFunc           func(user models.User) (int, error)
+	getByUsernameOrEmail func(username, email string) (models.User, error)
+	getByIdFunc          func(id int) (models.User, error)
+	updateFunc           func(user models.User) (models.User, error)
+	deleteFunc           func(id int) error
 }
 
 func (m mockUserRepository) Create(user models.User) (int, error) {
@@ -26,8 +27,6 @@ func (m mockUserRepository) Update(user models.User) (models.User, error) {
 func (m mockUserRepository) Delete(id int) error {
 	return m.deleteFunc(id)
 }
-<<<<<<< HEAD
-=======
 
 func (m mockUserRepository) GetByUsernameOrEmail(username string, email string) (models.User, error) {
 	return m.getByUsernameOrEmail(username, email)
@@ -167,4 +166,3 @@ func (m mockArtistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPrev
 func (m mockArtistRepository) GetArtistSongPreviews(id int) ([]models.SongPreview, error) {
 	return m.getArtistSongPreviewsFunc(id)
 }
->>>>>>> rest-api

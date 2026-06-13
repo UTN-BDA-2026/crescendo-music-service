@@ -15,6 +15,7 @@ import (
 
 type UserService interface {
 	Register(mapping.UserRegisterDTO) (models.User, error)
+	Login(mapping.UserLoginDTO) (string, error)
 }
 
 type userService struct {
