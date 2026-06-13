@@ -3,7 +3,17 @@ package mapping
 import (
 	"crescendo-api/models"
 	"crescendo-api/security"
+	"time"
 )
+
+type SongCreateDTO struct {
+	Title       string    `json:"title"`
+	FileId      string    `json:"file_id"`
+	GenreId     int       `json:"genre_id"`
+	Duration    int       `json:"duration"`
+	Bpm         int       `json:"bpm"`
+	ReleaseDate time.Time `json:"release_date"`
+}
 
 type SongPreviewDTO struct {
 	Id       string `json:"id"`

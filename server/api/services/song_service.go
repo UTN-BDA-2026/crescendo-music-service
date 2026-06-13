@@ -1,6 +1,7 @@
 package services
 
 import (
+	"crescendo-api/mapping"
 	"crescendo-api/models"
 	"crescendo-api/repositories"
 	"crescendo-api/security"
@@ -9,14 +10,20 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 type SongService interface {
 	GetSongPlaybackInfo(id int) (models.PlaybackData, error)
+	Create(mapping.SongCreateDTO) (models.Song, error)
 }
 
 type songService struct {
 	repository repositories.SongRepository
+}
+
+func isValidFileId(fileId string) bool {
+	return len(fileId) == 24
 }
 
 func NewSongService(repository repositories.SongRepository) SongService {
@@ -78,4 +85,32 @@ func (s songService) GetSongPlaybackInfo(id int) (models.PlaybackData, error) {
 
 		StreamURL: streamURL,
 	}, nil
+}
+
+func (s songService) Create(requestDTO mapping.SongCreateDTO) (models.Song, error) {
+	if requestDTO.Title == "" {
+		return models.Song{}, errors.New("invalid song title")
+	}
+
+	if !isValidFileId(requestDTO.FileId) {
+		return models.Song{}, errors.New("invalid file id")
+	}
+
+	if requestDTO.GenreId <= 0 {
+		return models.Song{}, errors.New("invalid genre id")
+	}
+
+	if requestDTO.Duration <= 0 {
+		return models.Song{}, errors.New("invalid duration")
+	}
+
+	if requestDTO.Bpm < 0 {
+		return models.Song{}, errors.New("invalid bpm")
+	}
+
+	if requestDTO.ReleaseDate.After(time.Now().UTC()) {
+		return models.Song{}, errors.New("invalid release date")
+	}
+
+	return models.Song{}, nil
 }

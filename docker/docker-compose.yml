@@ -22,6 +22,38 @@ services:
             - "traefik.tcp.routers.postgresql.rule=HostSNI(`*`)"
             - "traefik.tcp.routers.postgresql.entrypoints=postgresql"
             - "traefik.tcp.services.postgresql.loadbalancer.server.port=5432"
+
+    mongodb:
+        container_name: mongodb-servidor
+        image: mongo:8.0.4
+        ports:
+            - "27017:27017"
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-admin}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-admin123}
+        volumes:
+            - ./mongo-data:/data/db
+        restart: always
+
+    streaming-service:
+        container_name: streaming-servidor
+        image: crescendo-streaming:1.0.0
+        build:
+            context: ../server/streaming
+            dockerfile: Dockerfile
+        ports:
+            - "8081:8081"
+        environment:
+            - ENV=CONTAINER
+            - STREAMING_SERVICE_PORT=8081
+            - MONGODB_HOST=mongodb-servidor
+            - MONGODB_USER=${MONGO_USER:-admin}
+            - MONGODB_PASSWORD=${MONGO_PASSWORD:-admin123}
+            - MONGODB_PORT=27017
+        depends_on:
+            - mongodb
+        restart: always
+
     crescendo-api:
         image: crescendo-api:1.0.0
         ports:
