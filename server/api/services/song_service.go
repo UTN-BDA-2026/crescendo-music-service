@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 type SongService interface {
@@ -97,6 +98,22 @@ func (s songService) Create(requestDTO mapping.SongCreateDTO) (models.Song, erro
 
 	if requestDTO.GenreId <= 0 {
 		return models.Song{}, errors.New("invalid genre id")
+	}
+
+	if requestDTO.Duration <= 0 {
+		return models.Song{}, errors.New("invalid duration")
+	}
+
+	if requestDTO.Bpm < 0 {
+		return models.Song{}, errors.New("invalid bpm")
+	}
+
+	if requestDTO.ReleaseDate.After(time.Now().UTC()) {
+		return models.Song{}, errors.New("invalid release date")
+	}
+
+	if len(requestDTO.ArtistIds) == 0 {
+		return models.Song{}, errors.New("song must have at least one artist")
 	}
 
 	return models.Song{}, nil

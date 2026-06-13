@@ -13,6 +13,7 @@ type SongCreateDTO struct {
 	Duration    int       `json:"duration"`
 	Bpm         int       `json:"bpm"`
 	ReleaseDate time.Time `json:"release_date"`
+	ArtistIds   []int     `json:"artist_ids"`
 }
 
 type SongPreviewDTO struct {
