@@ -79,3 +79,53 @@ func TestCanCreateSong_EmptyTitle(t *testing.T) {
 	check.Error(err)
 	check.Equal(models.Song{}, song)
 }
+
+func TestCanCreateSong_InvalidFileId(t *testing.T) {
+	check := require.New(t)
+
+	repo := mockSongRepository{
+		createFunc: func(song models.Song) (int, error) {
+			t.Fatal("repository should not be called")
+			return 0, nil
+		},
+	}
+
+	service := services.NewSongService(repo)
+
+	song, err := service.Create(mapping.SongCreateDTO{
+		Title:       "Title",
+		FileId:      "idFalsa",
+		GenreId:     1,
+		Duration:    200,
+		Bpm:         120,
+		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	})
+
+	check.Error(err)
+	check.Equal(models.Song{}, song)
+}
+
+func TestCanCreateSong_InvalidGenreId(t *testing.T) {
+	check := require.New(t)
+
+	repo := mockSongRepository{
+		createFunc: func(song models.Song) (int, error) {
+			t.Fatal("repository should not be called")
+			return 0, nil
+		},
+	}
+
+	service := services.NewSongService(repo)
+
+	song, err := service.Create(mapping.SongCreateDTO{
+		Title:       "Title",
+		FileId:      "507f1f77bcf86cd799439011",
+		GenreId:     0,
+		Duration:    200,
+		Bpm:         120,
+		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	})
+
+	check.Error(err)
+	check.Equal(models.Song{}, song)
+}

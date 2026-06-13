@@ -21,6 +21,10 @@ type songService struct {
 	repository repositories.SongRepository
 }
 
+func isValidFileId(fileId string) bool {
+	return len(fileId) == 24
+}
+
 func NewSongService(repository repositories.SongRepository) SongService {
 	service := songService{
 		repository: repository,
@@ -85,6 +89,14 @@ func (s songService) GetSongPlaybackInfo(id int) (models.PlaybackData, error) {
 func (s songService) Create(requestDTO mapping.SongCreateDTO) (models.Song, error) {
 	if requestDTO.Title == "" {
 		return models.Song{}, errors.New("invalid song title")
+	}
+
+	if !isValidFileId(requestDTO.FileId) {
+		return models.Song{}, errors.New("invalid file id")
+	}
+
+	if requestDTO.GenreId <= 0 {
+		return models.Song{}, errors.New("invalid genre id")
 	}
 
 	return models.Song{}, nil
