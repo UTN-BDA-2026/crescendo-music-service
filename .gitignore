@@ -33,3 +33,6 @@ go.work.sum
 
 # MongoDB data
 mongo-data/
+
+# Backup
+docker/backups/
