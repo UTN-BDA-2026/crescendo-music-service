@@ -1,17 +1,44 @@
 package main
 
 import (
+	"crescendo-streaming/config"
+	"crescendo-streaming/controllers"
 	"crescendo-streaming/router"
 	"fmt"
 	"log"
+	"os"
+
+	"go.mongodb.org/mongo-driver/mongo/gridfs"
 )
 
 func main() {
-	r := router.SetupRouter()
+	if err := config.LoadEnv(); err != nil {
+		log.Printf("Warn: Couldn't load .env: %v", err)
+	}
 
-	fmt.Println("Iniciando servicio de streaming en el puerto 8081...")
+	uri := os.Getenv("MONGODB_URI")
+	client, err := config.ConnectDB(uri)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+	fmt.Println("Connected to MongoDB successfully")
 
-	if err := r.Run(":8081"); err != nil {
-		log.Fatalf("Error al iniciar el servidor: %v", err)
+	db := client.Database("crescendo_audio")
+	bucket, err := gridfs.NewBucket(db)
+	if err != nil {
+		log.Fatalf("Failed to create GridFS bucket: %v", err)
+	}
+
+	streamingCtrl := controllers.NewStreamingController(bucket)
+	r := router.SetupRouter(streamingCtrl)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8081"
+	}
+
+	fmt.Printf("Starting server on port %s...\n", port)
+	if err := r.Run(":" + port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }

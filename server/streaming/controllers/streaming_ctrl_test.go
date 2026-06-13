@@ -13,7 +13,7 @@ import (
 func TestUploadAudio(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	ctrl := StreamingController(nil)
+	ctrl := NewStreamingController(nil)
 
 	r := gin.Default()
 	r.POST("/upload", ctrl.UploadAudio)
@@ -37,4 +37,22 @@ func TestUploadAudio(t *testing.T) {
 		t.Fatalf("Expected status %d, got %d", http.StatusOK, w.Code)
 	}
 
+}
+
+func TestStreamAudio(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	ctrl := NewStreamingController(nil)
+
+	r := gin.Default()
+	r.GET("/stream/:file_id", ctrl.StreamAudio)
+
+	req, _ := http.NewRequest(http.MethodGet, "/stream/507f1f77bcf86cd799439011", nil)
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Esperaba código %d, pero obtuve %d", http.StatusOK, w.Code)
+	}
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -16,10 +17,16 @@ func TestConnectDB(t *testing.T) {
 		t.Logf("Warning: Could not load .env file: %v", err)
 	}
 
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		t.Fatal("MONGODB_URI environment variable is not set")
+	dbUser := os.Getenv("MONGODB_USER")
+	dbPass := os.Getenv("MONGODB_PASSWORD")
+	dbHost := os.Getenv("MONGODB_HOST")
+	dbPort := os.Getenv("MONGODB_PORT")
+
+	if dbHost == "" || dbPort == "" {
+		t.Fatal("Missing required .env variables")
 	}
+
+	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", dbUser, dbPass, dbHost, dbPort)
 
 	client, err := ConnectDB(uri)
 	if err != nil {
