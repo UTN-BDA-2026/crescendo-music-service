@@ -12,6 +12,7 @@ type UserRepository interface {
 	GetByUsernameOrEmail(username, email string) (models.User, error)
 	Update(user models.User) (models.User, error)
 	Delete(id int) error
+	GetByUsernameOrEmail(username string, email string) (models.User, error)
 }
 
 type userRepository struct {
@@ -131,6 +132,46 @@ func (r userRepository) Delete(id int) error {
 }
 
 func (r userRepository) GetByUsernameOrEmail(username, email string) (models.User, error) {
-	// TODO: Implementar la query real de SQL @CodeR4nger
-	return models.User{}, nil
+	var (
+		query string
+		arg   string
+	)
+
+	if username != "" {
+		query = `
+			SELECT id, username, email, password_hash,
+			       register_date, date_of_birth, profile_image_url
+			FROM users
+			WHERE username = $1
+		`
+		arg = username
+	} else {
+		query = `
+			SELECT id, username, email, password_hash,
+			       register_date, date_of_birth, profile_image_url
+			FROM users
+			WHERE email = $1
+		`
+		arg = email
+	}
+
+	var user models.User
+
+	err := r.db.QueryRow(query, arg).Scan(
+		&user.Id,
+		&user.Username,
+		&user.Email,
+		&user.PasswordHash,
+		&user.RegisterDate,
+		&user.DateOfBirth,
+		&user.ProfilePictureUrl,
+	)
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	user.DateOfBirth = user.DateOfBirth.UTC() //Correccion de conversión de fechas de Postgres a Go
+	user.RegisterDate = user.RegisterDate.UTC()
+	return user, nil
 }

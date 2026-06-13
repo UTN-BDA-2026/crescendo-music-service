@@ -16,10 +16,10 @@ func init() {
 
 type mockUserRepository struct {
 	createFunc           func(user models.User) (int, error)
-	getByUsernameOrEmail func(username, email string) (models.User, error)
 	getByIdFunc          func(id int) (models.User, error)
 	updateFunc           func(user models.User) (models.User, error)
 	deleteFunc           func(id int) error
+	getByUsernameOrEmail func(username string, email string) (models.User, error)
 }
 
 func (m mockUserRepository) Create(user models.User) (int, error) {

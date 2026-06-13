@@ -51,7 +51,7 @@ services:
             - mongodb
         restart: always
 
-    sysacad:
+    crescendo-api:
         image: crescendo-api:1.0.0
         ports:
             - "8080:8080"
@@ -71,7 +71,7 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.enable=true"
-            - "traefik.http.routers.sysacad.rule=Host(`crescensdo.api.localhost`)"
-            - "traefik.http.routers.sysacad.tls=true"
-            - "traefik.http.services.sysacad.loadbalancer.server.port=8080"
-            - "traefik.docker.network=sysacad-net"    
+            - "traefik.http.routers.crescendo-api.rule=Host(`crescensdo.api.localhost`)"
+            - "traefik.http.routers.crescendo-api.tls=true"
+            - "traefik.http.services.crescendo-api.loadbalancer.server.port=8080"
+            - "traefik.docker.network=crescendo-api-net"    
