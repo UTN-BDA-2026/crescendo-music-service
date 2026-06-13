@@ -30,3 +30,19 @@ services:
         volumes:
             - ./mongo-data:/data/db
         restart: always
+
+    streaming-service:
+        container_name: streaming-servidor
+        build: ../server/streaming
+        ports:
+            - "8081:8081"
+        environment:
+            - ENV=CONTAINER
+            - STREAMING_SERVICE_PORT=8081
+            - MONGODB_HOST=mongodb-servidor
+            - MONGODB_USER=${MONGO_USER:-admin}
+            - MONGODB_PASSWORD=${MONGO_PASSWORD:-admin123}
+            - MONGODB_PORT=27017
+        depends_on:
+            - mongodb
+        restart: always
