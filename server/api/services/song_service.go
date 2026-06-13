@@ -1,6 +1,7 @@
 package services
 
 import (
+	"crescendo-api/mapping"
 	"crescendo-api/models"
 	"crescendo-api/repositories"
 	"crescendo-api/security"
@@ -13,6 +14,7 @@ import (
 
 type SongService interface {
 	GetSongPlaybackInfo(id int) (models.PlaybackData, error)
+	Create(mapping.SongCreateDTO) (models.Song, error)
 }
 
 type songService struct {
@@ -78,4 +80,12 @@ func (s songService) GetSongPlaybackInfo(id int) (models.PlaybackData, error) {
 
 		StreamURL: streamURL,
 	}, nil
+}
+
+func (s songService) Create(requestDTO mapping.SongCreateDTO) (models.Song, error) {
+	if requestDTO.Title == "" {
+		return models.Song{}, errors.New("invalid song title")
+	}
+
+	return models.Song{}, nil
 }

@@ -1,6 +1,16 @@
 package services_test
 
-import "crescendo-api/models"
+import (
+	"crescendo-api/models"
+	"os"
+)
+
+// Simulate .env variables for testing
+
+func init() {
+	os.Setenv("JWT_SECRET", "secret-key")
+	os.Setenv("BASE_URL", "http://localhost:8080")
+}
 
 // User Repository Mock
 
