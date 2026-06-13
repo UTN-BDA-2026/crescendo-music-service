@@ -6,8 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type StreamingController struct {
@@ -34,7 +36,14 @@ func (sc *StreamingController) UploadAudio(c *gin.Context) {
 		return
 	}
 
-	uploadStream, err := sc.Bucket.OpenUploadStream(header.Filename)
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "audio/mpeg"
+	}
+
+	opts := options.GridFSUpload().SetMetadata(bson.D{{Key: "contentType", Value: contentType}})
+
+	uploadStream, err := sc.Bucket.OpenUploadStream(header.Filename, opts)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload stream"})
 		return
@@ -78,7 +87,15 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 
 	fileSize := downloadStream.GetFile().Length
 
-	c.Header("Content-Type", "audio/mpeg")
+	contentType := "audio/mpeg"
+	metadata := downloadStream.GetFile().Metadata
+	if metadata != nil {
+		if val, err := metadata.LookupErr("contentType"); err == nil {
+			contentType = val.StringValue()
+		}
+	}
+
+	c.Header("Content-Type", contentType)
 	c.Header("Accept-Ranges", "bytes")
 	c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
 
