@@ -112,9 +112,5 @@ func (s songService) Create(requestDTO mapping.SongCreateDTO) (models.Song, erro
 		return models.Song{}, errors.New("invalid release date")
 	}
 
-	if len(requestDTO.ArtistIds) == 0 {
-		return models.Song{}, errors.New("song must have at least one artist")
-	}
-
 	return models.Song{}, nil
 }

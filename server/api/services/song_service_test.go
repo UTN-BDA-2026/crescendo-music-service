@@ -148,7 +148,6 @@ func TestCanCreateSong_InvalidDuration(t *testing.T) {
 		Duration:    -5,
 		Bpm:         120,
 		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
-		ArtistIds:   []int{1},
 	})
 
 	check.Error(err)
@@ -172,7 +171,6 @@ func TestCanCreateSong_InvalidBPM(t *testing.T) {
 		Duration:    200,
 		Bpm:         -10,
 		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
-		ArtistIds:   []int{1},
 	})
 
 	check.Error(err)
@@ -197,31 +195,6 @@ func TestCanCreateSong_FutureReleaseDate(t *testing.T) {
 		Duration:    200,
 		Bpm:         120,
 		ReleaseDate: futureDate,
-		ArtistIds:   []int{1},
-	})
-
-	check.Error(err)
-	check.Equal(models.Song{}, song)
-}
-
-func TestCanCreateSong_NoArtists(t *testing.T) {
-	check := require.New(t)
-	repo := mockSongRepository{
-		createFunc: func(song models.Song) (int, error) {
-			t.Fatal("repository should not be called")
-			return 0, nil
-		},
-	}
-	service := services.NewSongService(repo)
-
-	song, err := service.Create(mapping.SongCreateDTO{
-		Title:       "Title",
-		FileId:      "507f1f77bcf86cd799439011",
-		GenreId:     1,
-		Duration:    200,
-		Bpm:         120,
-		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
-		ArtistIds:   []int{},
 	})
 
 	check.Error(err)
