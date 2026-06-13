@@ -17,14 +17,7 @@ services:
             interval: 5s
             timeout: 5s
             retries: 10
-        labels:
-            - "traefik.enable=true"
-            - "traefik.tcp.routers.postgresql.rule=HostSNI(`*`)"
-            - "traefik.tcp.routers.postgresql.entrypoints=postgresql"
-            - "traefik.tcp.services.postgresql.loadbalancer.server.port=5432"
-
     mongodb:
-        container_name: mongodb-servidor
         image: mongo:8.0.4
         ports:
             - "27017:27017"
@@ -35,12 +28,8 @@ services:
             - ./mongo-data:/data/db
         restart: always
 
-    streaming-service:
-        container_name: streaming-servidor
+    streaming:
         image: crescendo-streaming:1.0.0
-        build:
-            context: ../server/streaming
-            dockerfile: Dockerfile
         ports:
             - "8081:8081"
         environment:
@@ -71,11 +60,4 @@ services:
             - BASE_URL=${BASE_URL:-http://localhost:8081}
         depends_on:
             postgresql:
-                condition: service_healthy
-        labels:
-            - "traefik.enable=true"
-            - "traefik.enable=true"
-            - "traefik.http.routers.crescendo-api.rule=Host(`crescensdo.api.localhost`)"
-            - "traefik.http.routers.crescendo-api.tls=true"
-            - "traefik.http.services.crescendo-api.loadbalancer.server.port=8080"
-            - "traefik.docker.network=crescendo-api-net"    
+                condition: service_healthy 
