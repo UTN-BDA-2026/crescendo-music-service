@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
@@ -64,7 +66,46 @@ func (sc *StreamingController) UploadAudio(c *gin.Context) {
 }
 
 func (sc *StreamingController) StreamAudio(c *gin.Context) {
-	fileIDStr := c.Param("file_id")
+	tokenString := c.Query("token")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+		return
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured on server"})
+		return
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims format"})
+		return
+	}
+
+	if claims["type"] != "stream" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid token type"})
+		return
+	}
+
+	fileIDStr, ok := claims["file_id"].(string)
+	if !ok || fileIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token missing file_id"})
+		return
+	}
 
 	if sc.Bucket == nil {
 		c.Status(http.StatusOK)

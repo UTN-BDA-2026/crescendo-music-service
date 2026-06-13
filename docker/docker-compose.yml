@@ -39,6 +39,7 @@ services:
             - MONGODB_USER=${MONGO_USER:-admin}
             - MONGODB_PASSWORD=${MONGO_PASSWORD:-admin123}
             - MONGODB_PORT=27017
+            - JWT_SECRET=${JWT_SECRET:-secret-key}
         depends_on:
             - mongodb
         restart: always
@@ -55,8 +56,8 @@ services:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PORT=${POSTGRES_PORT}
             - SQID_ALPHABET=${SQID_ALPHABET}
-            - JWT_SECRET=${JWT_SECRET}
-            - BASE_URL=${BASE_URL}
+            - JWT_SECRET=${JWT_SECRET:-secret-key}
+            - BASE_URL=${BASE_URL:-http://localhost:8081}
         depends_on:
             postgresql:
                 condition: service_healthy 
