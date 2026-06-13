@@ -16,7 +16,13 @@ func main() {
 		log.Printf("Warn: Couldn't load .env: %v", err)
 	}
 
-	uri := os.Getenv("MONGODB_URI")
+	dbUser := os.Getenv("MONGODB_USER")
+	dbPass := os.Getenv("MONGODB_PASSWORD")
+	dbHost := os.Getenv("MONGODB_HOST")
+	dbPort := os.Getenv("MONGODB_PORT")
+
+	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", dbUser, dbPass, dbHost, dbPort)
+
 	client, err := config.ConnectDB(uri)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
@@ -32,7 +38,7 @@ func main() {
 	streamingCtrl := controllers.NewStreamingController(bucket)
 	r := router.SetupRouter(streamingCtrl)
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("STREAMING_SERVICE_PORT")
 	if port == "" {
 		port = "8081"
 	}
