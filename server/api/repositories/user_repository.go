@@ -9,7 +9,6 @@ import (
 type UserRepository interface {
 	Create(user models.User) (int, error)
 	GetById(id int) (models.User, error)
-	GetByUsernameOrEmail(username, email string) (models.User, error)
 	Update(user models.User) (models.User, error)
 	Delete(id int) error
 	GetByUsernameOrEmail(username string, email string) (models.User, error)
