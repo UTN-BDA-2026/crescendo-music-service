@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreatePlaylist(t *testing.T) {
@@ -17,7 +17,7 @@ func TestCreatePlaylist(t *testing.T) {
 		UserId:       3,
 	}
 
-	check := assert.New(t)
+	check := require.New(t)
 
 	check.Equal(6, playlist.Id)
 	check.Equal("TestTitle", playlist.Title)

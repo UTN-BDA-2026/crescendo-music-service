@@ -5,6 +5,7 @@ import (
 	"crescendo-api/models"
 	"crescendo-api/repositories"
 	"crescendo-api/security"
+	"database/sql"
 	"errors"
 	"log"
 	"net/mail"
@@ -114,4 +115,47 @@ func (s userService) Register(requestDTO mapping.UserRegisterDTO) (models.User, 
 	}
 
 	return user, nil
+}
+
+func (s userService) Login(loginDTO mapping.UserLoginDTO) (string, error) {
+
+	if loginDTO.Username == "" && loginDTO.Email == "" {
+		return "", errors.New("invalid credentials")
+	}
+
+	if loginDTO.Username != "" && !isValidUsername(loginDTO.Username) {
+		return "", errors.New("invalid credentials")
+	}
+
+	if loginDTO.Email != "" && !isValidEmail(loginDTO.Email) {
+		return "", errors.New("invalid credentials")
+	}
+
+	if loginDTO.Password == "" {
+		return "", errors.New("invalid credentials")
+	}
+
+	user, err := s.repository.GetByUsernameOrEmail(loginDTO.Username, loginDTO.Email)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", errors.New("invalid credentials")
+		}
+
+		log.Printf("fetching user on login failed: %v", err)
+		return "", errors.New("something went wrong")
+	}
+
+	if !security.VerifyPassword(loginDTO.Password, user.PasswordHash) {
+		return "", errors.New("invalid credentials")
+	}
+
+	token, err := security.GenerateLoginToken(user.Id, user.Username)
+
+	if err != nil {
+		log.Printf("token generating on login failed: %v", err)
+		return "", errors.New("something went wrong")
+	}
+
+	return token, nil
 }

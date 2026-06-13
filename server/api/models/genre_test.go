@@ -4,7 +4,7 @@ import (
 	"crescendo-api/models"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateGenre(t *testing.T) {
@@ -13,7 +13,7 @@ func TestCreateGenre(t *testing.T) {
 		Name: "Rock",
 	}
 
-	check := assert.New(t)
+	check := require.New(t)
 	check.Equal(4, genre.Id)
 	check.Equal("Rock", genre.Name)
 }

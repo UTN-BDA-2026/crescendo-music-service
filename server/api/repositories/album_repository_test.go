@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAlbumCRUD(t *testing.T) {
@@ -34,7 +35,7 @@ func TestAlbumCRUD(t *testing.T) {
 	}
 
 	t.Run("Create", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -69,7 +70,7 @@ func TestAlbumCRUD(t *testing.T) {
 		check.Equal(expected, created)
 	})
 	t.Run("Read", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -102,7 +103,7 @@ func TestAlbumCRUD(t *testing.T) {
 	})
 
 	t.Run("Update", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -145,7 +146,7 @@ func TestAlbumCRUD(t *testing.T) {
 		check.NotEqual(reference.Title, updated.Title)
 	})
 	t.Run("Delete", func(t *testing.T) {
-		check := assert.New(t)
+		check := require.New(t)
 
 		transaction, err := db.Begin()
 
@@ -183,4 +184,89 @@ func TestAlbumCRUD(t *testing.T) {
 		check.Error(err)
 		check.Zero(deleted.Id)
 	})
+}
+
+func TestGetSongsPreviewFromAlbumId(t *testing.T) {
+	check := require.New(t)
+
+	db, err := database.NewConnection()
+
+	check.NoError(err)
+
+	transaction, err := db.Begin()
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	check.NoError(err)
+
+	album := models.Album{
+		Title:         "JJ",
+		Type:          "EP",
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+	genre := models.Genre{
+		Name: "Rock",
+	}
+
+	song := models.Song{
+		Title:       "Song Title",
+		FileId:      "0xq2454",
+		Duration:    253,
+		Bpm:         110,
+		ReleaseDate: time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+
+	artist := models.Artist{
+		Name: "Artist 1",
+	}
+
+	listedSong := models.ListedSong{
+		SongPreviewWithArtists: models.SongPreviewWithArtists{
+			Title:    song.Title,
+			Duration: song.Duration,
+			Artists: []models.ArtistLabel{
+				{
+					Name: artist.Name,
+				},
+			},
+		},
+		TrackPosition: 1,
+	}
+
+	albumRepo := repositories.NewAlbumRepository(transaction)
+	artistRepo := repositories.NewArtistRepository(transaction)
+	genreRepo := repositories.NewGenreRepository(transaction)
+	songRepo := repositories.NewSongRepository(transaction)
+
+	genre.Id, err = genreRepo.Create(genre)
+	check.NoError(err)
+
+	song.GenreId = genre.Id
+	album.GenreId = genre.Id
+
+	song.Id, err = songRepo.Create(song)
+	check.NoError(err)
+	listedSong.Id = song.Id
+
+	album.Id, err = albumRepo.Create(album)
+	check.NoError(err)
+
+	artist.Id, err = artistRepo.Create(artist)
+	check.NoError(err)
+	listedSong.Artists[0].Id = artist.Id
+
+	err = albumRepo.AddSongToAlbum(song.Id, album.Id, listedSong.TrackPosition)
+	check.NoError(err)
+
+	err = songRepo.AddArtistToSong(artist.Id, song.Id)
+
+	songList, err := albumRepo.GetSongsPreviewFromAlbumId(album.Id)
+	check.NoError(err)
+
+	check.Len(songList, 1)
+	check.Equal(listedSong, songList[0])
 }

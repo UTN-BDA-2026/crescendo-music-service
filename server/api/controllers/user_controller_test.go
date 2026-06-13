@@ -2,14 +2,14 @@ package controllers_test
 
 import (
 	"bytes"
+	"crescendo-api/config/app"
 	"crescendo-api/controllers"
 	"crescendo-api/mapping"
 	"crescendo-api/models"
+	"crescendo-api/router"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/gin-gonic/gin"
 )
 
 type MockUserService struct{}
@@ -20,9 +20,9 @@ func (m *MockUserService) Register(req mapping.UserRegisterDTO) (models.User, er
 
 func TestCanReceiveRegisterRequest(t *testing.T) {
 	service := &MockUserService{}
-	controller := controllers.NewUserController(service)
-	router := gin.Default()
-	router.POST("/users", controller.Register)
+	testRouter := router.NewRouter(&app.Container{
+		User: controllers.NewUserController(service),
+	})
 	body := `{
 				"username": "Username",
 				"email":"test@mail.com",
@@ -34,7 +34,7 @@ func TestCanReceiveRegisterRequest(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	testRouter.ServeHTTP(w, req)
 
 	if w.Code != http.StatusCreated {
 		t.Errorf("expected 201, got %d", w.Code)

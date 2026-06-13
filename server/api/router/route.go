@@ -17,6 +17,15 @@ func NewRouter(container *app.Container) *gin.Engine {
 	})
 
 	router.POST("/users", container.User.Register)
+	router.POST("/users/login", container.User.Login)
+
+	router.GET("/songs/:id/playback", container.Song.GetSongPlaybackInfo)
+
+	router.GET("/albums/:id", container.Album.GetAlbumDetails)
+
+	router.GET("/artists/:id", container.Artist.GetArtist)
+	router.GET("/artists/:id/albums", container.Artist.GetArtistAlbumPreviews)
+	router.GET("/artists/:id/songs", container.Artist.GetArtistSongPreviews)
 
 	return router
 }

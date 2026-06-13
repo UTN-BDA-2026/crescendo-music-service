@@ -6,3 +6,8 @@ type Artist struct {
 	Information string
 	ImageUrl    string
 }
+
+type ArtistLabel struct {
+	Id   int
+	Name string
+}

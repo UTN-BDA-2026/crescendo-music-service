@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCreateUser(t *testing.T) {
@@ -18,7 +18,7 @@ func TestCreateUser(t *testing.T) {
 		DateOfBirth:       time.Date(1999, 8, 15, 14, 30, 45, 100, time.UTC),
 		ProfilePictureUrl: "files/grrs.png",
 	}
-	check := assert.New(t)
+	check := require.New(t)
 	check.Equal(6, user.Id)
 	check.Equal("TestUsername", user.Username)
 	check.Equal("testmail@mail.com", user.Email)
