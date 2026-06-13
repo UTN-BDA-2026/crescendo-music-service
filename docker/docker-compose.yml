@@ -37,7 +37,10 @@ services:
 
     streaming-service:
         container_name: streaming-servidor
-        build: ../server/streaming
+        image: crescendo-streaming:1.0.0
+        build:
+            context: ../server/streaming
+            dockerfile: Dockerfile
         ports:
             - "8081:8081"
         environment:
