@@ -83,7 +83,23 @@ services:
             postgresql:
                 condition: service_healthy 
         restart: always
-
+    seed:
+        build: ./seed
+        depends_on:
+            postgresql:
+                condition: service_healthy
+            mongodb:
+                condition: service_healthy
+        environment:
+            - POSTGRES_HOST=${POSTGRES_HOST:-postgresql}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - MONGODB_HOST=${MONGODB_HOST:-mongodb}
+            - MONGODB_PORT=${MONGODB_PORT:-27017}
+            - MONGODB_USER=${MONGODB_USER:-admin}
+            - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
+        restart: "no"
 volumes:
     postgres-data:
     mongo-data:
