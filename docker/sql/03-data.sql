@@ -128,3 +128,29 @@ INSERT INTO artists_songs VALUES
 -- Equals
 (5,19,'Main Artist'),
 (5,20,'Main Artist');
+
+
+
+SELECT setval(
+    pg_get_serial_sequence('artists', 'id'),
+    COALESCE((SELECT MAX(id) FROM artists), 1),
+    true
+);
+
+SELECT setval(
+    pg_get_serial_sequence('genres', 'id'),
+    COALESCE((SELECT MAX(id) FROM genres), 1),
+    true
+);
+
+SELECT setval(
+    pg_get_serial_sequence('albums', 'id'),
+    COALESCE((SELECT MAX(id) FROM albums), 1),
+    true
+);
+
+SELECT setval(
+    pg_get_serial_sequence('songs', 'id'),
+    COALESCE((SELECT MAX(id) FROM songs), 1),
+    true
+);
