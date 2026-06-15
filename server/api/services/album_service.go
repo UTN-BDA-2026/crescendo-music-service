@@ -1,10 +1,14 @@
 package services
 
 import (
+	"crescendo-api/database"
 	"crescendo-api/models"
 	"crescendo-api/repositories"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"time"
 )
 
 type AlbumService interface {
@@ -14,15 +18,18 @@ type AlbumService interface {
 type albumService struct {
 	repository      repositories.AlbumRepository
 	genreRepository repositories.GenreRepository
+	cache           *database.Cache
 }
 
-func NewAlbumService(repository repositories.AlbumRepository, genreRepo repositories.GenreRepository) AlbumService {
-	service := albumService{
-		repository:      repository,
-		genreRepository: genreRepo,
+func NewAlbumService(r repositories.AlbumRepository,
+	gr repositories.GenreRepository,
+	c *database.Cache,
+) AlbumService {
+	return albumService{
+		repository:      r,
+		genreRepository: gr,
+		cache:           c,
 	}
-
-	return service
 }
 
 func (s albumService) GetAlbumDetails(id int) (models.AlbumDetailed, error) {
@@ -31,28 +38,37 @@ func (s albumService) GetAlbumDetails(id int) (models.AlbumDetailed, error) {
 		return models.AlbumDetailed{}, errors.New("invalid id")
 	}
 
-	album, err := s.repository.GetById(id)
+	if s.cache != nil && s.cache.IsReady() {
+		key := fmt.Sprintf("albums:details:%v", id)
 
+		cachedValue, found, err := s.cache.Get(key)
+		if err == nil && found {
+			var album models.AlbumDetailed
+			if err := json.Unmarshal([]byte(cachedValue), &album); err == nil {
+				return album, nil
+			}
+		}
+	}
+
+	album, err := s.repository.GetById(id)
 	if err != nil {
-		log.Printf("fetching album for album details failed: %v", err)
+		log.Printf("fetching album failed: %v", err)
 		return models.AlbumDetailed{}, errors.New("something went wrong")
 	}
 
 	genre, err := s.genreRepository.GetById(album.GenreId)
-
 	if err != nil {
-		log.Printf("fetching genre for album details failed: %v", err)
+		log.Printf("fetching genre failed: %v", err)
 		return models.AlbumDetailed{}, errors.New("something went wrong")
 	}
 
 	songs, err := s.repository.GetSongsPreviewFromAlbumId(id)
-
 	if err != nil {
-		log.Printf("fetching songs for album details failed: %v", err)
+		log.Printf("fetching songs failed: %v", err)
 		return models.AlbumDetailed{}, errors.New("something went wrong")
 	}
 
-	return models.AlbumDetailed{
+	result := models.AlbumDetailed{
 		Id:            album.Id,
 		Title:         album.Title,
 		Type:          album.Type,
@@ -60,5 +76,15 @@ func (s albumService) GetAlbumDetails(id int) (models.AlbumDetailed, error) {
 		ReleaseDate:   album.ReleaseDate,
 		Genre:         genre,
 		Songs:         songs,
-	}, nil
+	}
+
+	if s.cache != nil && s.cache.IsReady() {
+		key := fmt.Sprintf("albums:details:%v", id)
+		data, err := json.Marshal(result)
+		if err == nil {
+			_ = s.cache.Set(key, string(data), 10*time.Minute)
+		}
+	}
+
+	return result, nil
 }

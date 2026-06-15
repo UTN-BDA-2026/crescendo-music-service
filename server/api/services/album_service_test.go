@@ -81,7 +81,7 @@ func TestGetAlbumDetails(t *testing.T) {
 			}, nil
 		},
 	}
-	service := services.NewAlbumService(albumRepository, genreRepository)
+	service := services.NewAlbumService(albumRepository, genreRepository, nil)
 
 	album, err := service.GetAlbumDetails(albumId)
 

@@ -32,9 +32,11 @@ func NewContainer(db database.DBTX) *Container {
 	idEncoder := security.NewSquidEncoder(sq)
 	songController := controllers.NewSongController(songService, idEncoder)
 
+	cache := database.NewCacheConnection()
+
 	albumRepo := repositories.NewAlbumRepository(db)
 	genreRepo := repositories.NewGenreRepository(db)
-	albumService := services.NewAlbumService(albumRepo, genreRepo)
+	albumService := services.NewAlbumService(albumRepo, genreRepo, cache)
 	albumController := controllers.NewAlbumController(albumService, idEncoder)
 
 	artistRepo := repositories.NewArtistRepository(db)
