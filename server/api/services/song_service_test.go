@@ -52,3 +52,34 @@ func TestPlaySong_Success(t *testing.T) {
 	check.Equal(models.ArtistLabel{Id: 1, Name: "Artist 1"}, playbackData.Artists[0])
 	check.Equal(models.ArtistLabel{Id: 2, Name: "Artist 2"}, playbackData.Artists[1])
 }
+
+func TestSearchSongs(t *testing.T) {
+	check := require.New(t)
+
+	referenceSongs := []models.SongSearchResult{
+		{
+			Id:          1,
+			Title:       "Blinding Lights",
+			ArtistNames: "The Weeknd",
+			AlbumTitles: "After Hours",
+		},
+	}
+
+	repo := mockSongRepository{
+		searchByTitleFunc: func(title string) ([]models.SongSearchResult, error) {
+			if title == "Blinding Lights" {
+				return referenceSongs, nil
+			}
+			return []models.SongSearchResult{}, nil
+		},
+	}
+
+	service := services.NewSongService(repo)
+
+	fetchedSongs, err := service.SearchSongs("Blinding Lights")
+	check.NoError(err)
+	check.Equal(referenceSongs, fetchedSongs)
+
+	_, err = service.SearchSongs("")
+	check.Error(err)
+}

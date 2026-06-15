@@ -18,11 +18,19 @@ type SongPreview struct {
 	Duration int
 }
 
+type SongSearchResult struct {
+	Id          int
+	Title       string
+	Duration    int
+	ArtistNames string
+	AlbumTitles string
+}
+
 type SongPreviewWithArtists struct {
-	Id       int           `json:"id"`
-	Title    string        `json:"title"`
-	Duration int           `json:"duration"`
-	Artists  []ArtistLabel `json:"artists"`
+	Id       int
+	Title    string
+	Duration int
+	Artists  []ArtistLabel
 }
 
 type PlaybackData struct {
@@ -32,5 +40,5 @@ type PlaybackData struct {
 
 type ListedSong struct {
 	SongPreviewWithArtists
-	TrackPosition int `json:"track_position"`
+	TrackPosition int
 }

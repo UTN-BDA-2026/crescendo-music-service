@@ -13,6 +13,7 @@ type SongRepository interface {
 	Delete(id int) error
 	AddArtistToSong(artistId int, songId int) error
 	GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error)
+	SearchByTitle(title string) ([]models.SongSearchResult, error)
 }
 
 type songRepository struct {
@@ -188,4 +189,47 @@ func (r songRepository) GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLa
 	}
 
 	return artists, nil
+}
+
+func (r songRepository) SearchByTitle(title string) ([]models.SongSearchResult, error) {
+	rows, err := r.db.Query(`
+		SELECT 
+			s.id, 
+			s.title, 
+			s.duration,
+			COALESCE(string_agg(DISTINCT a.name, ', '), '') AS artist_names,
+			COALESCE(string_agg(DISTINCT al.title, ', '), '') AS album_titles
+		FROM songs s
+		LEFT JOIN artists_songs as_rel ON s.id = as_rel.song_id
+		LEFT JOIN artists a ON as_rel.artist_id = a.id
+		LEFT JOIN albums_songs al_rel ON s.id = al_rel.song_id
+		LEFT JOIN albums al ON al_rel.album_id = al.id
+		WHERE s.title ILIKE '%' || $1 || '%'
+		GROUP BY s.id, s.title, s.duration
+	`, title)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var songs []models.SongSearchResult
+	for rows.Next() {
+		var song models.SongSearchResult
+		if err := rows.Scan(
+			&song.Id,
+			&song.Title,
+			&song.Duration,
+			&song.ArtistNames,
+			&song.AlbumTitles,
+		); err != nil {
+			return nil, err
+		}
+		songs = append(songs, song)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return songs, nil
 }

@@ -100,33 +100,31 @@ func TestGetArtistSongPreviews(t *testing.T) {
 
 }
 
-func TestGetAllArtist(t *testing.T) {
+func TestSearchArtists(t *testing.T) {
 	check := require.New(t)
 
-	artists := []models.Artist{
+	referenceArtists := []models.Artist{
 		{
-			Id:          5,
-			Name:        "Artist 1",
-			Information: "Artist description",
-			ImageUrl:    "fvfu/erui.png",
-		},
-		{
-			Id:          7,
-			Name:        "Artist 2",
-			Information: "Artist description 4",
-			ImageUrl:    "fvfu/erui.png",
+			Id:   1,
+			Name: "The Weeknd",
 		},
 	}
+
 	repo := mockArtistRepository{
-		getAllFunc: func() ([]models.Artist, error) {
-			return artists, nil
+		searchByNameFunc: func(name string) ([]models.Artist, error) {
+			if name == "The Weeknd" {
+				return referenceArtists, nil
+			}
+			return []models.Artist{}, nil
 		},
 	}
 
 	service := services.NewArtistService(repo)
 
-	fetchedArtists, err := service.GetAllArtist()
-
+	fetchedArtists, err := service.SearchArtists("The Weeknd")
 	check.NoError(err)
-	check.Equal(artists, fetchedArtists)
+	check.Equal(referenceArtists, fetchedArtists)
+
+	_, err = service.SearchArtists("")
+	check.Error(err)
 }

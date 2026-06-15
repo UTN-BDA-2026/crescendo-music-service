@@ -12,7 +12,7 @@ type ArtistService interface {
 	GetArtist(id int) (models.Artist, error)
 	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
 	GetArtistSongPreviews(id int) ([]models.SongPreview, error)
-	GetAllArtist() ([]models.Artist, error)
+	SearchArtists(name string) ([]models.Artist, error)
 }
 
 type artistService struct {
@@ -79,12 +79,18 @@ func (s artistService) GetArtistSongPreviews(id int) ([]models.SongPreview, erro
 	return songs, nil
 }
 
-func (s artistService) GetAllArtist() ([]models.Artist, error) {
+func (s artistService) SearchArtists(name string) ([]models.Artist, error) {
+	if name == "" {
+		return []models.Artist{}, errors.New("invalid search query")
+	}
 
-	artists, err := s.repository.GetAll()
-
+	artists, err := s.repository.SearchByName(name)
 	if err != nil {
-		log.Printf("fetching artists list failed: %v", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return []models.Artist{}, nil
+		}
+
+		log.Printf("searching artists failed: %v", err)
 		return []models.Artist{}, errors.New("something went wrong")
 	}
 	return artists, nil

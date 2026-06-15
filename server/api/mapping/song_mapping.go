@@ -37,6 +37,32 @@ func SongPreviewListToDTO(encoder security.Encoder, list []models.SongPreview) (
 	return songsDTO, nil
 }
 
+type SongSearchResultDTO struct {
+	Id          string `json:"id"`
+	Title       string `json:"title"`
+	Duration    int    `json:"duration"`
+	ArtistNames string `json:"artist_names"`
+	AlbumTitles string `json:"album_titles"`
+}
+
+func SongSearchResultListToDTO(encoder security.Encoder, list []models.SongSearchResult) ([]SongSearchResultDTO, error) {
+	var songsDTO []SongSearchResultDTO
+	for _, song := range list {
+		hashedId, err := encoder.Encode(song.Id)
+		if err != nil {
+			return []SongSearchResultDTO{}, nil
+		}
+		songsDTO = append(songsDTO, SongSearchResultDTO{
+			Id:          hashedId,
+			Title:       song.Title,
+			Duration:    song.Duration,
+			ArtistNames: song.ArtistNames,
+			AlbumTitles: song.AlbumTitles,
+		})
+	}
+	return songsDTO, nil
+}
+
 type ArtistLabelDTO struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`

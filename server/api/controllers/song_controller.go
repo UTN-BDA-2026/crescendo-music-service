@@ -47,3 +47,26 @@ func (sc *SongController) GetSongPlaybackInfo(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, playbackDataDTO)
 }
+
+func (sc *SongController) SearchSongs(c *gin.Context) {
+	title := c.Query("title")
+	if title == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "title query parameter is required"})
+		return
+	}
+
+	songs, err := sc.service.SearchSongs(title)
+
+	if err == nil {
+		responseSongs, _ := mapping.SongSearchResultListToDTO(sc.encoder, songs)
+
+		if responseSongs == nil {
+			responseSongs = []mapping.SongSearchResultDTO{}
+		}
+
+		c.JSON(http.StatusOK, responseSongs)
+
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}

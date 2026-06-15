@@ -47,3 +47,35 @@ func (sc *AlbumController) GetAlbumDetails(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, albumDetailsDTO)
 }
+
+func (ac *AlbumController) SearchAlbums(c *gin.Context) {
+	title := c.Query("title")
+	if title == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "title query parameter is required"})
+		return
+	}
+
+	albums, err := ac.service.SearchAlbums(title)
+
+	if err == nil {
+		var responseAlbums []mapping.AlbumPreviewDTO
+		for _, album := range albums {
+			encodedId, _ := ac.encoder.Encode(album.Id)
+			responseAlbums = append(responseAlbums, mapping.AlbumPreviewDTO{
+				Id:            encodedId,
+				Title:         album.Title,
+				Type:          album.Type,
+				CoverImageUrl: album.CoverImageUrl,
+				ReleaseDate:   album.ReleaseDate,
+			})
+		}
+		if responseAlbums == nil {
+			responseAlbums = []mapping.AlbumPreviewDTO{}
+		}
+
+		c.JSON(http.StatusOK, responseAlbums)
+
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}

@@ -270,3 +270,51 @@ func TestGetSongsPreviewFromAlbumId(t *testing.T) {
 	check.Len(songList, 1)
 	check.Equal(listedSong, songList[0])
 }
+
+func TestSearchAlbumsByTitle(t *testing.T) {
+	check := require.New(t)
+
+	db, err := database.NewConnection()
+	check.NoError(err)
+
+	transaction, err := db.Begin()
+	t.Cleanup(func() {
+		transaction.Rollback()
+		db.Close()
+	})
+	check.NoError(err)
+
+	genreRepo := repositories.NewGenreRepository(transaction)
+	repository := repositories.NewAlbumRepository(transaction)
+
+	genre := models.Genre{
+		Name: "Pop",
+	}
+	genre.Id, err = genreRepo.Create(genre)
+	check.NoError(err)
+
+	album := models.Album{
+		Title:         "After Hours",
+		Type:          "Album",
+		GenreId:       genre.Id,
+		CoverImageUrl: "afterhours.png",
+		ReleaseDate:   time.Date(2020, 3, 20, 0, 0, 0, 0, time.UTC),
+	}
+
+	album.Id, err = repository.Create(album)
+	check.NoError(err)
+
+	results, err := repository.SearchByTitle("After Hours")
+	check.NoError(err)
+	check.NotEmpty(results)
+	check.Equal(album.Title, results[0].Title)
+
+	results, err = repository.SearchByTitle("hours")
+	check.NoError(err)
+	check.NotEmpty(results)
+	check.Equal(album.Title, results[0].Title)
+
+	results, err = repository.SearchByTitle("Starboy")
+	check.NoError(err)
+	check.Empty(results)
+}
