@@ -29,6 +29,7 @@ services:
             - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-admin123}
         volumes:
             - mongo-data:/data/db
+            - mongo-config:/data/configdb
         restart: always
         healthcheck:
             test:
@@ -103,3 +104,4 @@ services:
 volumes:
     postgres-data:
     mongo-data:
+    mongo-config:
