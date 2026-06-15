@@ -14,13 +14,13 @@ INSERT INTO genres (id, name) VALUES
 INSERT INTO albums
 (id,title,type,genre_id,cover_image_url,release_date)
 VALUES
-(1,'After Hours','LP',2,NULL,'2020-03-20'),
-(2,'Dawn FM','LP',2,NULL,'2022-01-07'),
-(3,'Future Nostalgia','LP',1,NULL,'2020-03-27'),
-(4,'A Head Full of Dreams','LP',3,NULL,'2015-12-04'),
-(5,'Midnights','LP',1,NULL,'2022-10-21'),
-(6,'Divide','LP',1,NULL,'2017-03-03'),
-(7,'Equals','LP',1,NULL,'2021-10-29');
+(1,'After Hours','LP',2,'','2020-03-20'),
+(2,'Dawn FM','LP',2,'','2022-01-07'),
+(3,'Future Nostalgia','LP',1,'','2020-03-27'),
+(4,'A Head Full of Dreams','LP',3,'','2015-12-04'),
+(5,'Midnights','LP',1,'','2022-10-21'),
+(6,'Divide','LP',1,'','2017-03-03'),
+(7,'Equals','LP',1,'','2021-10-29');
 
 INSERT INTO artists_albums VALUES
 (1,1),
