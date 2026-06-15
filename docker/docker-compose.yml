@@ -84,6 +84,20 @@ services:
             postgresql:
                 condition: service_healthy 
         restart: always
+
+    dragonfly:
+        image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.34.2
+        restart: always
+        ports:
+            - "6379:6379"
+        volumes:
+            - dragonfly-data:/data
+        ulimits:
+            memlock: -1
+        environment:
+            - CACHE_PASSWORD=${CACHE_PASSWORD}
+        command: dragonfly --requirepass ${CACHE_PASSWORD}
+
     seed:
         build: ./seed
         depends_on:
@@ -105,3 +119,4 @@ volumes:
     postgres-data:
     mongo-data:
     mongo-config:
+    dragonfly-data:
