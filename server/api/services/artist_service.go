@@ -12,6 +12,7 @@ type ArtistService interface {
 	GetArtist(id int) (models.Artist, error)
 	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
 	GetArtistSongPreviews(id int) ([]models.SongPreview, error)
+	GetAllArtist() ([]models.Artist, error)
 }
 
 type artistService struct {
@@ -76,4 +77,15 @@ func (s artistService) GetArtistSongPreviews(id int) ([]models.SongPreview, erro
 		return []models.SongPreview{}, errors.New("something went wrong")
 	}
 	return songs, nil
+}
+
+func (s artistService) GetAllArtist() ([]models.Artist, error) {
+
+	artists, err := s.repository.GetAll()
+
+	if err != nil {
+		log.Printf("fetching artists list failed: %v", err)
+		return []models.Artist{}, errors.New("something went wrong")
+	}
+	return artists, nil
 }

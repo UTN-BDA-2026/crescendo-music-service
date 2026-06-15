@@ -23,6 +23,7 @@ func NewRouter(container *app.Container) *gin.Engine {
 
 	router.GET("/albums/:id", container.Album.GetAlbumDetails)
 
+	router.GET("/artists", container.Artist.GetAllArtist)
 	router.GET("/artists/:id", container.Artist.GetArtist)
 	router.GET("/artists/:id/albums", container.Artist.GetArtistAlbumPreviews)
 	router.GET("/artists/:id/songs", container.Artist.GetArtistSongPreviews)

@@ -30,6 +30,17 @@ func (m *MockArtistService) GetArtist(id int) (models.Artist, error) {
 	}, nil
 }
 
+func (m *MockArtistService) GetAllArtist() ([]models.Artist, error) {
+	return []models.Artist{
+		{
+			Id:          5,
+			Name:        "ABBA",
+			Information: "Description of the artist",
+			ImageUrl:    "a/dfv/gf.png",
+		},
+	}, nil
+}
+
 func (m *MockArtistService) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error) {
 	return []models.AlbumPreview{
 		{
@@ -176,4 +187,36 @@ func TestGetArtistSongPreview(t *testing.T) {
 	check.Equal([]uint64{uint64(43)}, sq.Decode(response[1].Id))
 	check.Equal("Song 2", response[1].Title)
 	check.Equal(332, response[1].Duration)
+}
+
+func TestGetAllArtist(t *testing.T) {
+	check := require.New(t)
+
+	service := &MockArtistService{}
+	sq, err := sqids.New(sqids.Options{
+		Alphabet:  os.Getenv("SQID_ALPHABET"),
+		MinLength: 6,
+	})
+	check.NoError(err)
+	sqEncoder := security.NewSquidEncoder(sq)
+
+	testRouter := router.NewRouter(&app.Container{
+		Artist: controllers.NewArtistController(service, sqEncoder),
+	})
+
+	req, err := http.NewRequest(http.MethodGet, "/artists", nil)
+	check.NoError(err)
+	w := httptest.NewRecorder()
+	testRouter.ServeHTTP(w, req)
+	check.Equal(http.StatusOK, w.Code)
+	var response []mapping.ArtistDTO
+
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	check.NoError(err)
+
+	check.Len(response, 1)
+	check.Equal([]uint64{uint64(5)}, sq.Decode(response[0].Id))
+	check.Equal("ABBA", response[0].Name)
+	check.Equal("Description of the artist", response[0].Information)
+	check.Equal("a/dfv/gf.png", response[0].ImageUrl)
 }

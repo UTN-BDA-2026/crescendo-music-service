@@ -266,3 +266,48 @@ func TestArtistSongRelation(t *testing.T) {
 	check.Len(fetchedSongs, len(expected))
 	check.Equal(expected[0], fetchedSongs[0])
 }
+
+func TestGetAllArtists(t *testing.T) {
+	check := require.New(t)
+
+	db, err := database.NewConnection()
+
+	check.NoError(err)
+
+	transaction, err := db.Begin()
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+		db.Close() // Cerramos la conexion al terminar el test (exitoso o no)
+	})
+
+	check.NoError(err)
+
+	artists := []models.Artist{
+		{
+			Name:        "Artist 1",
+			Information: "Artist description",
+			ImageUrl:    "fvfu/erui.png",
+		},
+		{
+			Name:        "Artist 2",
+			Information: "Artist description 4",
+			ImageUrl:    "fvfu/erui.png",
+		},
+	}
+
+	repository := repositories.NewArtistRepository(transaction)
+
+	artists[0].Id, err = repository.Create(artists[0])
+	check.NoError(err)
+
+	artists[1].Id, err = repository.Create(artists[1])
+	check.NoError(err)
+
+	fetchedArtists, err := repository.GetAll()
+	check.NoError(err)
+
+	check.Contains(fetchedArtists, artists[0]) // Checking if new addition exists (in case of previous inserts)
+	check.Contains(fetchedArtists, artists[1])
+
+}

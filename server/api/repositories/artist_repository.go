@@ -3,12 +3,14 @@ package repositories
 import (
 	"crescendo-api/database"
 	"crescendo-api/models"
+	"database/sql"
 	"fmt"
 )
 
 type ArtistRepository interface {
 	Create(artist models.Artist) (int, error)
 	GetById(id int) (models.Artist, error)
+	GetAll() ([]models.Artist, error)
 	Update(artist models.Artist) (models.Artist, error)
 	Delete(id int) error
 	AddAlbumToArtist(albumId, artistId int) error
@@ -55,13 +57,63 @@ func (r artistRepository) GetById(id int) (models.Artist, error) {
 			WHERE id = $1
 		`, id)
 	var artist models.Artist
+	var imageURL sql.NullString
 	err := row.Scan(
 		&artist.Id,
 		&artist.Name,
 		&artist.Information,
-		&artist.ImageUrl,
+		&imageURL,
 	)
+
+	if imageURL.Valid {
+		artist.ImageUrl = imageURL.String
+	}
 	return artist, err
+}
+
+func (r artistRepository) GetAll() ([]models.Artist, error) {
+	rows, err := r.databaseContext.Query(`
+		SELECT
+			id,
+			name,
+			information,
+			image_url
+		FROM artists
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var artists []models.Artist
+
+	for rows.Next() {
+		var artist models.Artist
+
+		var imageURL sql.NullString
+
+		err := rows.Scan(
+			&artist.Id,
+			&artist.Name,
+			&artist.Information,
+			&imageURL,
+		)
+
+		if imageURL.Valid {
+			artist.ImageUrl = imageURL.String
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		artists = append(artists, artist)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return artists, nil
 }
 
 func (r artistRepository) Update(artist models.Artist) (models.Artist, error) {
