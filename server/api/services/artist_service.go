@@ -114,6 +114,19 @@ func (s artistService) GetArtistSongPreviews(id int) ([]models.SongPreview, erro
 	if id <= 0 {
 		return []models.SongPreview{}, errors.New("invalid id")
 	}
+
+	if s.cache != nil && s.cache.IsReady() {
+		key := fmt.Sprintf("artist:%v:songs", id)
+
+		cachedValue, found, err := s.cache.Get(key)
+		if err == nil && found {
+			var songs []models.SongPreview
+			if err := json.Unmarshal([]byte(cachedValue), &songs); err == nil {
+				return songs, nil
+			}
+		}
+	}
+
 	songs, err := s.repository.GetArtistSongPreviews(id)
 
 	if err != nil {
@@ -124,6 +137,15 @@ func (s artistService) GetArtistSongPreviews(id int) ([]models.SongPreview, erro
 		log.Printf("fetching songs from artist %v failed: %v", id, err)
 		return []models.SongPreview{}, errors.New("something went wrong")
 	}
+
+	if s.cache != nil && s.cache.IsReady() {
+		key := fmt.Sprintf("artist:%v:songs", id)
+		data, err := json.Marshal(songs)
+		if err == nil {
+			_ = s.cache.Set(key, string(data), 30*time.Minute)
+		}
+	}
+
 	return songs, nil
 }
 

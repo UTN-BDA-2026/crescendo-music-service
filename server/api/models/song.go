@@ -13,9 +13,9 @@ type Song struct {
 }
 
 type SongPreview struct {
-	Id       int
-	Title    string
-	Duration int
+	Id       int    `json:"id"`
+	Title    string `json:"title"`
+	Duration int    `json:"duration"`
 }
 
 type SongPreviewWithArtists struct {
