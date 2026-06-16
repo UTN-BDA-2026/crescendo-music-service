@@ -148,6 +148,7 @@ type mockArtistRepository struct {
 	addAlbumToArtistFunc           func(albumId, artistId int) error
 	getAlbumPreviewsByArtistIdFunc func(id int) ([]models.AlbumPreview, error)
 	getArtistSongPreviewsFunc      func(id int) ([]models.SongPreview, error)
+	findByNameLikeFunc             func(name string) ([]models.Artist, error)
 }
 
 func (m mockArtistRepository) Create(artist models.Artist) (int, error) {
@@ -180,4 +181,8 @@ func (m mockArtistRepository) GetArtistSongPreviews(id int) ([]models.SongPrevie
 
 func (m mockArtistRepository) GetAll() ([]models.Artist, error) {
 	return m.getAllFunc()
+}
+
+func (m mockArtistRepository) FindByNameLike(name string) ([]models.Artist, error) {
+	return m.findByNameLikeFunc(name)
 }

@@ -130,3 +130,34 @@ func TestGetAllArtist(t *testing.T) {
 	check.NoError(err)
 	check.Equal(artists, fetchedArtists)
 }
+
+func TestSearchArtists(t *testing.T) {
+	check := require.New(t)
+
+	artists := []models.Artist{
+		{
+			Id:          5,
+			Name:        "Artist 1",
+			Information: "Artist description",
+			ImageUrl:    "fvfu/erui.png",
+		},
+		{
+			Id:          7,
+			Name:        "Artist 2",
+			Information: "Artist description 4",
+			ImageUrl:    "fvfu/erui.png",
+		},
+	}
+	repo := mockArtistRepository{
+		findByNameLikeFunc: func(name string) ([]models.Artist, error) {
+			return artists, nil
+		},
+	}
+
+	service := services.NewArtistService(repo, nil)
+
+	fetchedArtists, err := service.SearchArtists("Artist")
+
+	check.NoError(err)
+	check.Equal(artists, fetchedArtists)
+}
