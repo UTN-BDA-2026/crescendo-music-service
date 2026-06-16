@@ -13,6 +13,7 @@ import (
 
 type SongService interface {
 	GetSongPlaybackInfo(id int) (models.PlaybackData, error)
+	SearchSongs(name string) ([]models.SongPreviewWithArtists, error)
 }
 
 type songService struct {
@@ -78,4 +79,22 @@ func (s songService) GetSongPlaybackInfo(id int) (models.PlaybackData, error) {
 
 		StreamURL: streamURL,
 	}, nil
+}
+
+func (s songService) SearchSongs(name string) ([]models.SongPreviewWithArtists, error) {
+	if name == "" {
+		return nil, errors.New("invalid search string")
+	}
+
+	songs, err := s.repository.FindByNameLike(name)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []models.SongPreviewWithArtists{}, nil
+		}
+
+		log.Printf("fetching songs for search %q failed: %v", name, err)
+		return []models.SongPreviewWithArtists{}, errors.New("something went wrong")
+	}
+	return songs, nil
 }
