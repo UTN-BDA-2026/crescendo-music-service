@@ -22,9 +22,9 @@ type AlbumDetailed struct {
 }
 
 type AlbumPreview struct {
-	Id            int
-	Title         string
-	Type          string
-	CoverImageUrl string
-	ReleaseDate   time.Time
+	Id            int       `json:"id"`
+	Title         string    `json:"title"`
+	Type          string    `json:"type"`
+	CoverImageUrl string    `json:"cover_image_url"`
+	ReleaseDate   time.Time `json:"release_date"`
 }
