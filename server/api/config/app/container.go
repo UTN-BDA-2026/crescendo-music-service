@@ -40,7 +40,7 @@ func NewContainer(db database.DBTX) *Container {
 	albumController := controllers.NewAlbumController(albumService, idEncoder)
 
 	artistRepo := repositories.NewArtistRepository(db)
-	artistService := services.NewArtistService(artistRepo)
+	artistService := services.NewArtistService(artistRepo, cache)
 	artistController := controllers.NewArtistController(artistService, idEncoder)
 
 	return &Container{

@@ -24,7 +24,7 @@ func TestGetArtist(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedArtist, err := service.GetArtist(artist.Id)
 
@@ -58,7 +58,7 @@ func TestGetArtistAlbums(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedAlbums, err := service.GetArtistAlbumPreviews(artistId)
 
@@ -90,7 +90,7 @@ func TestGetArtistSongPreviews(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedSongs, err := service.GetArtistSongPreviews(artistId)
 
@@ -123,7 +123,7 @@ func TestGetAllArtist(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedArtists, err := service.GetAllArtist()
 

@@ -1,11 +1,15 @@
 package services
 
 import (
+	"crescendo-api/database"
 	"crescendo-api/models"
 	"crescendo-api/repositories"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"time"
 )
 
 type ArtistService interface {
@@ -17,11 +21,13 @@ type ArtistService interface {
 
 type artistService struct {
 	repository repositories.ArtistRepository
+	cache      *database.Cache
 }
 
-func NewArtistService(repository repositories.ArtistRepository) ArtistService {
+func NewArtistService(repository repositories.ArtistRepository, cache *database.Cache) ArtistService {
 	service := artistService{
 		repository: repository,
+		cache:      cache,
 	}
 
 	return service
@@ -31,6 +37,18 @@ func (s artistService) GetArtist(id int) (models.Artist, error) {
 
 	if id <= 0 {
 		return models.Artist{}, errors.New("invalid id")
+	}
+
+	if s.cache != nil && s.cache.IsReady() {
+		key := fmt.Sprintf("artist:%v", id)
+
+		cachedValue, found, err := s.cache.Get(key)
+		if err == nil && found {
+			var artist models.Artist
+			if err := json.Unmarshal([]byte(cachedValue), &artist); err == nil {
+				return artist, nil
+			}
+		}
 	}
 
 	artist, err := s.repository.GetById(id)
@@ -43,6 +61,15 @@ func (s artistService) GetArtist(id int) (models.Artist, error) {
 		log.Printf("fetching artists failed: %v", err)
 		return models.Artist{}, errors.New("something went wrong")
 	}
+
+	if s.cache != nil && s.cache.IsReady() {
+		key := fmt.Sprintf("artist:%v", id)
+		data, err := json.Marshal(artist)
+		if err == nil {
+			_ = s.cache.Set(key, string(data), 30*time.Minute)
+		}
+	}
+
 	return artist, nil
 }
 
