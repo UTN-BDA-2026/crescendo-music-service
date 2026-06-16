@@ -151,11 +151,30 @@ func (s artistService) GetArtistSongPreviews(id int) ([]models.SongPreview, erro
 
 func (s artistService) GetAllArtist() ([]models.Artist, error) {
 
+	if s.cache != nil && s.cache.IsReady() {
+		key := "artists"
+
+		cachedValue, found, err := s.cache.Get(key)
+		if err == nil && found {
+			var artists []models.Artist
+			if err := json.Unmarshal([]byte(cachedValue), &artists); err == nil {
+				return artists, nil
+			}
+		}
+	}
 	artists, err := s.repository.GetAll()
 
 	if err != nil {
 		log.Printf("fetching artists list failed: %v", err)
 		return []models.Artist{}, errors.New("something went wrong")
+	}
+
+	if s.cache != nil && s.cache.IsReady() {
+		key := "artists"
+		data, err := json.Marshal(artists)
+		if err == nil {
+			_ = s.cache.Set(key, string(data), 30*time.Minute)
+		}
 	}
 	return artists, nil
 }
