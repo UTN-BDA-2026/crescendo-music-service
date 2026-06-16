@@ -16,6 +16,7 @@ type ArtistRepository interface {
 	AddAlbumToArtist(albumId, artistId int) error
 	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
 	GetArtistSongPreviews(id int) ([]models.SongPreview, error)
+	FindByNameLike(name string) ([]models.Artist, error)
 }
 
 type artistRepository struct {
@@ -260,4 +261,52 @@ func (r artistRepository) GetArtistSongPreviews(id int) ([]models.SongPreview, e
 	}
 
 	return songs, nil
+}
+
+func (r artistRepository) FindByNameLike(name string) ([]models.Artist, error) {
+	rows, err := r.databaseContext.Query(`
+		SELECT
+			id,
+			name,
+			information,
+			image_url
+		FROM artists
+		WHERE name ILIKE '%' || $1 || '%'
+		ORDER BY similarity(name, $1) DESC
+		LIMIT 20
+	`, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var artists []models.Artist
+
+	for rows.Next() {
+		var artist models.Artist
+
+		var imageURL sql.NullString
+
+		err := rows.Scan(
+			&artist.Id,
+			&artist.Name,
+			&artist.Information,
+			&imageURL,
+		)
+
+		if imageURL.Valid {
+			artist.ImageUrl = imageURL.String
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		artists = append(artists, artist)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return artists, nil
 }
