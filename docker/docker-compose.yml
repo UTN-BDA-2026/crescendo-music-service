@@ -48,6 +48,22 @@ services:
             timeout: 5s
             retries: 10
 
+    redis:
+        image: redis:7.4-alpine
+        ports:
+            - "6379:6379"
+        environment:
+            - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+        volumes:
+            - redis-data:/data
+        restart: always
+        command: redis-server ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
     crescendo-streaming:
         image: crescendo-streaming:1.0.0
         ports:
@@ -59,9 +75,14 @@ services:
             - MONGODB_PORT=${MONGODB_PORT:-27017}
             - MONGODB_USER=${MONGODB_USER:-admin}
             - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
+            - REDIS_HOST=${REDIS_HOST:-redis}
+            - REDIS_PORT=${REDIS_PORT:-6379}
+            - REDIS_PASSWORD=${REDIS_PASSWORD:-}
             - JWT_SECRET=${JWT_SECRET}
         depends_on:
             mongodb:
+                condition: service_healthy
+            redis:
                 condition: service_healthy
         restart: always
 
@@ -87,3 +108,4 @@ services:
 volumes:
     postgres-data:
     mongo-data:
+    redis-data:
