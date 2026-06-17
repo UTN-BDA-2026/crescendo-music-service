@@ -3,194 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-width=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crescendo Player</title>
-    <style>
-        @import url('https://fonts.cdnfonts.com/css/futury');
-        @import url('https://fonts.cdnfonts.com/css/cybercrime-2004');
-
-        body {
-            font-family: 'Futury', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-            max-width: 900px;
-            margin: auto;
-            background: url('https://i.pinimg.com/1200x/a4/77/ef/a477eff3d2fa525fda1bab66f23d637a.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: #1a365d;
-        }
-
-        section {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            padding: 25px;
-            margin-bottom: 25px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        button {
-            background: linear-gradient(180deg, #e0f2fe 0%, #38bdf8 50%, #0284c7 100%);
-            color: white;
-            border: 1px solid #0369a1;
-            padding: 8px 18px;
-            margin-top: 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.8), 0 4px 6px rgba(0, 0, 0, 0.15);
-            transition: all 0.2s ease;
-        }
-
-        button:hover {
-            background: linear-gradient(180deg, #f0f9ff 0%, #7dd3fc 50%, #0ea5e9 100%);
-            box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.9), 0 6px 10px rgba(0, 0, 0, 0.2);
-            transform: translateY(-1px);
-        }
-
-        button:active {
-            transform: translateY(1px);
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), 0 2px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        input {
-            padding: 10px;
-            margin: 6px 0;
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.7);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #38bdf8;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05), 0 0 8px rgba(56, 189, 248, 0.5);
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .song-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0.3) !important;
-            border-radius: 10px !important;
-            margin-bottom: 8px !important;
-            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6) !important;
-        }
-
-        .song-item:last-child {
-            margin-bottom: 0 !important;
-        }
-
-        #player-section {
-            background: linear-gradient(135deg, rgba(2, 132, 199, 0.85), rgba(30, 58, 138, 0.95)) !important;
-            backdrop-filter: blur(15px);
-            color: white;
-            position: sticky;
-            bottom: 20px;
-            border-radius: 16px;
-            z-index: 100;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.5);
-        }
-
-        #player-section h3 {
-            margin-top: 0;
-            color: #bae6fd;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        #now-playing-title {
-            color: #fff;
-            font-size: 1.4em;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #fff;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-            font-size: 2.2em;
-            margin-bottom: 20px;
-            font-family: 'Cybercrime 2004', sans-serif;
-        }
-
-        .header-title img {
-            width: 48px;
-            height: 48px;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.4) !important;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.6) !important;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), inset 0 1px 2px rgba(255, 255, 255, 0.8) !important;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-        }
-
-        /* Audio Player Customization */
-        audio {
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-            border-radius: 30px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* Specific Button Overrides */
-        #logout-btn {
-            background: linear-gradient(180deg, #fecaca 0%, #ef4444 50%, #b91c1c 100%);
-            border-color: #991b1b;
-        }
-
-        #logout-btn:hover {
-            background: linear-gradient(180deg, #fee2e2 0%, #f87171 50%, #dc2626 100%);
-        }
-
-        .play-btn {
-            background: linear-gradient(180deg, #d1fae5 0%, #10b981 50%, #047857 100%) !important;
-            border-color: #065f46 !important;
-        }
-
-        .play-btn:hover {
-            background: linear-gradient(180deg, #ecfdf5 0%, #34d399 50%, #059669 100%) !important;
-        }
-
-        #player-section button {
-            background: linear-gradient(180deg, #475569 0%, #1e293b 100%);
-            border: 1px solid #0f172a;
-            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.3);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #player-section button:hover {
-            background: linear-gradient(180deg, #64748b 0%, #334155 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -203,64 +18,83 @@
 
     <section id="auth-section">
         <h2>Autenticación</h2>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <form id="login-form" style="flex: 1; min-width: 250px;">
+
+        <div class="auth-container">
+            <form id="login-form" class="auth-form">
                 <h3>Login</h3>
                 <input type="text" id="log-username" placeholder="Usuario o Email" required>
                 <input type="password" id="log-password" placeholder="Contraseña" required>
                 <button type="submit">Entrar</button>
-                <p id="log-msg" style="color: red; font-size: 0.9em;"></p>
+                <p id="log-msg"></p>
             </form>
 
-            <form id="register-form"
-                style="flex: 1; min-width: 250px; border-left: 1px solid #eee; padding-left: 20px;">
+            <form id="register-form" class="auth-form register-form">
                 <h3>Registro Nuevo</h3>
                 <input type="text" id="reg-username" placeholder="Usuario" required>
                 <input type="email" id="reg-email" placeholder="Email" required>
                 <input type="password" id="reg-password" placeholder="Contraseña" required>
                 <input type="date" id="reg-dob" required>
                 <button type="submit">Registrarse</button>
-                <p id="reg-msg" style="font-size: 0.9em;"></p>
+                <p id="reg-msg"></p>
             </form>
         </div>
     </section>
 
     <section id="app-section" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="catalog-header">
             <h2>Catálogo</h2>
-            <button id="logout-btn" style="background: #ef4444;">Cerrar Sesión</button>
+            <button id="logout-btn">Cerrar Sesión</button>
         </div>
 
-        <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-            <p style="margin-top: 0;"><b>🔍 Buscar Artistas, Álbumes o Canciones</b></p>
-            <form id="global-search-form" style="display: flex; gap: 10px;">
-                <input type="text" id="search-query" placeholder="Escribe el nombre de un artista, álbum o canción..."
-                    style="flex: 1;" required>
-                <button type="submit" style="margin: 0;">Buscar</button>
+        <div class="search-box">
+            <p class="search-title">
+                <b>🔍 Buscar Artistas, Álbumes o Canciones</b>
+            </p>
+
+            <form id="global-search-form" class="search-form">
+                <input
+                    type="text"
+                    id="search-query"
+                    class="search-input"
+                    placeholder="Escribe el nombre de un artista, álbum o canción..."
+                    required>
+
+                <button type="submit" class="search-button">
+                    Buscar
+                </button>
             </form>
         </div>
 
         <div id="search-results">
             <div id="artist-results"></div>
-            <div id="album-results" style="margin-top: 20px;"></div>
-            <div id="song-results" style="margin-top: 20px;"></div>
+            <div id="album-results" class="results-section"></div>
+            <div id="song-results" class="results-section"></div>
         </div>
     </section>
 
     <section id="player-section" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div class="player-header">
             <div>
                 <h3>Reproduciendo ahora</h3>
-                <div id="now-playing-title">Selecciona una canción...</div>
+                <div id="now-playing-title">
+                    Selecciona una canción...
+                </div>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <button id="btn-prev" title="Anterior" style="background: #374151;">⏮</button>
-                <button id="btn-next" title="Siguiente" style="background: #374151;">⏭</button>
-                <button id="btn-random" title="Aleatorio (Desactivado)" style="background: #374151;">🔀</button>
-                <button id="btn-loop" title="Repetir (Ninguno)" style="background: #374151;">🔁</button>
+
+            <div class="player-controls">
+                <button id="btn-prev" class="player-btn" title="Anterior">⏮</button>
+                <button id="btn-next" class="player-btn" title="Siguiente">⏭</button>
+                <button id="btn-random" class="player-btn" title="Aleatorio (Desactivado)">🔀</button>
+                <button id="btn-loop" class="player-btn" title="Repetir (Ninguno)">🔁</button>
             </div>
         </div>
-        <audio id="audio-player" controls autoplay style="width: 100%; margin-top: 15px;"></audio>
+
+        <audio
+            id="audio-player"
+            class="audio-player"
+            controls
+            autoplay>
+        </audio>
     </section>
 
     <script src="app.js"></script>
