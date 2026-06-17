@@ -19,3 +19,7 @@ USING gin (name gin_trgm_ops);
 CREATE INDEX idx_song_title_trgm
 ON songs
 USING gin (title gin_trgm_ops);
+
+CREATE INDEX idx_album_title_trgm
+ON albums
+USING gin (title gin_trgm_ops);
