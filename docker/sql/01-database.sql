@@ -52,7 +52,24 @@ CREATE TABLE artists_songs (
     song_id INT NOT NULL REFERENCES songs(id),
     role TEXT,
     PRIMARY KEY(artist_id,song_id)
-);
+)
+PARTITION BY HASH (artist_id);
+
+CREATE TABLE artists_songs_p0
+PARTITION OF artists_songs
+FOR VALUES WITH (MODULUS 4, REMAINDER 0);
+
+CREATE TABLE artists_songs_p1
+PARTITION OF artists_songs
+FOR VALUES WITH (MODULUS 4, REMAINDER 1);
+
+CREATE TABLE artists_songs_p2
+PARTITION OF artists_songs
+FOR VALUES WITH (MODULUS 4, REMAINDER 2);
+
+CREATE TABLE artists_songs_p3
+PARTITION OF artists_songs
+FOR VALUES WITH (MODULUS 4, REMAINDER 3);
 
 CREATE TABLE albums_songs (
     track_position INT,
