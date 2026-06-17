@@ -91,6 +91,7 @@ type mockAlbumRepository struct {
 	deleteFunc                     func(id int) error
 	addSongToAlbumFunc             func(songId, albumId, trackPosition int) error
 	getSongsPreviewFromAlbumIdFunc func(id int) ([]models.ListedSong, error)
+	findByNameLikeFunc             func(name string) ([]models.AlbumPreview, error)
 }
 
 func (m mockAlbumRepository) Create(album models.Album) (int, error) {
@@ -115,6 +116,10 @@ func (m mockAlbumRepository) AddSongToAlbum(songId, albumId, trackPosition int) 
 
 func (m mockAlbumRepository) GetSongsPreviewFromAlbumId(id int) ([]models.ListedSong, error) {
 	return m.getSongsPreviewFromAlbumIdFunc(id)
+}
+
+func (m mockAlbumRepository) FindByNameLike(name string) ([]models.AlbumPreview, error) {
+	return m.findByNameLikeFunc(name)
 }
 
 // Genre Repository Mock
