@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"crescendo-api/config/app"
+	"crescendo-api/config/env"
 	"crescendo-api/controllers"
 	"crescendo-api/mapping"
 	"crescendo-api/models"
@@ -18,6 +19,10 @@ import (
 	"github.com/sqids/sqids-go"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	env.Load()
+}
 
 func (m *MockArtistService) SearchArtists(filter string) ([]models.Artist, error) {
 	return []models.Artist{
@@ -82,7 +87,8 @@ func TestCanProvideSearchResults(t *testing.T) {
 	testRouter := router.NewRouter(&app.Container{
 		Search: controllers.NewSearchController(artistService, songService, albumService, sqEncoder),
 	})
-
+	token, err := security.GenerateLoginToken(1, "testuser")
+	check.NoError(err)
 	searchWord := "searchword"
 	searchType := "all"
 
@@ -91,7 +97,7 @@ func TestCanProvideSearchResults(t *testing.T) {
 		fmt.Sprintf("/search?q=%v&type=%v", searchWord, searchType),
 		nil,
 	)
-
+	req.Header.Set("Authorization", "Bearer "+token)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)

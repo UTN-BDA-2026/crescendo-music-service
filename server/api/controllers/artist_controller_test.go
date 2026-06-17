@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"crescendo-api/config/app"
+	"crescendo-api/config/env"
 	"crescendo-api/controllers"
 	"crescendo-api/mapping"
 	"crescendo-api/models"
@@ -18,6 +19,10 @@ import (
 	"github.com/sqids/sqids-go"
 	"github.com/stretchr/testify/require"
 )
+
+func init() {
+	env.Load()
+}
 
 type MockArtistService struct{}
 
@@ -89,9 +94,11 @@ func TestGetArtist(t *testing.T) {
 	testRouter := router.NewRouter(&app.Container{
 		Artist: controllers.NewArtistController(service, sqEncoder),
 	})
-
+	token, err := security.GenerateLoginToken(1, "testuser")
+	check.NoError(err)
 	hashedId, err := sq.Encode([]uint64{uint64(5)})
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/artists/%s", hashedId), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)
@@ -121,9 +128,11 @@ func TestGetArtistAlbumPreviews(t *testing.T) {
 	testRouter := router.NewRouter(&app.Container{
 		Artist: controllers.NewArtistController(service, sqEncoder),
 	})
-
+	token, err := security.GenerateLoginToken(1, "testuser")
+	check.NoError(err)
 	hashedId, err := sq.Encode([]uint64{uint64(5)})
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/artists/%s/albums", hashedId), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)
@@ -167,9 +176,11 @@ func TestGetArtistSongPreview(t *testing.T) {
 	testRouter := router.NewRouter(&app.Container{
 		Artist: controllers.NewArtistController(service, sqEncoder),
 	})
-
+	token, err := security.GenerateLoginToken(1, "testuser")
+	check.NoError(err)
 	hashedId, err := sq.Encode([]uint64{uint64(5)})
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/artists/%s/songs", hashedId), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)
@@ -203,8 +214,10 @@ func TestGetAllArtist(t *testing.T) {
 	testRouter := router.NewRouter(&app.Container{
 		Artist: controllers.NewArtistController(service, sqEncoder),
 	})
-
+	token, err := security.GenerateLoginToken(1, "testuser")
+	check.NoError(err)
 	req, err := http.NewRequest(http.MethodGet, "/artists", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)

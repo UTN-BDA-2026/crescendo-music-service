@@ -22,16 +22,18 @@ func NewRouter(container *app.Container) *gin.Engine {
 	router.POST("/users", container.User.Register)
 	router.POST("/users/login", container.User.Login)
 
-	router.GET("/songs/:id/playback", container.Song.GetSongPlaybackInfo)
+	api := router.Group("/")
+	api.Use(middleware.Authentication())
+	api.GET("/songs/:id/playback", container.Song.GetSongPlaybackInfo)
 
-	router.GET("/albums/:id", container.Album.GetAlbumDetails)
+	api.GET("/albums/:id", container.Album.GetAlbumDetails)
 
-	router.GET("/artists", container.Artist.GetAllArtist)
-	router.GET("/artists/:id", container.Artist.GetArtist)
-	router.GET("/artists/:id/albums", container.Artist.GetArtistAlbumPreviews)
-	router.GET("/artists/:id/songs", container.Artist.GetArtistSongPreviews)
+	api.GET("/artists", container.Artist.GetAllArtist)
+	api.GET("/artists/:id", container.Artist.GetArtist)
+	api.GET("/artists/:id/albums", container.Artist.GetArtistAlbumPreviews)
+	api.GET("/artists/:id/songs", container.Artist.GetArtistSongPreviews)
 
-	router.GET("/search", container.Search.SearchByName)
+	api.GET("/search", container.Search.SearchByName)
 
 	return router
 }
