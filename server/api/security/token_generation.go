@@ -1,9 +1,7 @@
 package security
 
 import (
-	"crescendo-api/config/env"
 	"errors"
-	"log"
 	"os"
 	"time"
 
@@ -21,10 +19,6 @@ func GenerateLoginToken(id int, username string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	err := env.Load()
-	if err != nil {
-		log.Fatalf("Unable to load environmental variables file: %v", err)
-	}
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		return "", errors.New("jwt secret not configured")
@@ -49,10 +43,6 @@ func GenerateStreamToken(id int, file_id string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	err := env.Load()
-	if err != nil {
-		log.Fatalf("Unable to load environmental variables file: %v", err)
-	}
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		return "", errors.New("jwt secret not configured")
