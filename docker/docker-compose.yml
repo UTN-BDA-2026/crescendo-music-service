@@ -77,6 +77,9 @@ services:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
+            - CACHE_HOST=${CACHE_HOST}
+            - CACHE_PORT=${CACHE_PORT}
+            - CACHE_PASSWORD=${CACHE_PASSWORD}
             - SQID_ALPHABET=${SQID_ALPHABET}
             - JWT_SECRET=${JWT_SECRET:-secret-key}
             - BASE_URL=${BASE_URL:-http://crescendo-streaming:${STREAMING_SERVICE_PORT:-8081}}
