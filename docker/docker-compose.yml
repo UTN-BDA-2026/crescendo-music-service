@@ -1,18 +1,66 @@
 name: crescendo-music-service
 
 services:
+    cert-init:
+        image: alpine:3.22
+        command: >
+            sh -c "
+            apk add --no-cache openssl &&
+            mkdir -p /certs &&
+            if [ ! -f /certs/ca.crt ]; then
+
+                echo 'Generating CA...';
+
+                openssl genrsa -out /certs/ca.key 4096;
+
+                openssl req -x509 -new -nodes -key /certs/ca.key -sha256 -days 3650 -subj '/CN=crescendo-ca' -out /certs/ca.crt;
+
+                echo 'Generating server certificate...';
+
+                openssl genrsa -out /certs/server.key 4096;
+
+                printf 'subjectAltName=DNS:postgresql\n' > /tmp/server.ext;
+
+                openssl req -new -key /certs/server.key -subj '/CN=postgresql' -out /tmp/server.csr;
+
+                openssl x509 -req -in /tmp/server.csr -CA /certs/ca.crt -CAkey /certs/ca.key -CAcreateserial -out /certs/server.crt -days 3650 -sha256 -extfile /tmp/server.ext;
+
+                chown 999:999 /certs/server.key /certs/server.crt;
+
+                chmod 600 /certs/server.key;
+
+            fi
+            "
+        volumes:
+            - postgres-certs:/certs
+        restart: "no"
     postgresql:
         image: postgres:15.4-bullseye
         ports:
             - "5433:5432"
+
+        depends_on:
+            cert-init:
+                condition: service_completed_successfully
+
         environment:
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - PGDATA=/var/lib/postgresql/data/pgdata
+
+        command:
+            - postgres
+            - -c
+            - ssl=on
+            - -c
+            - ssl_cert_file=/certs/server.crt
+            - -c
+            - ssl_key_file=/certs/server.key
         volumes:
             - ./sql:/docker-entrypoint-initdb.d
             - postgres-data:/var/lib/postgresql/data
+            - postgres-certs:/certs:ro
         restart: always
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -77,15 +125,19 @@ services:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_SSL_MODE=verify-full
+            - POSTGRES_SSL_ROOT_CERT=/certs/ca.crt
             - CACHE_HOST=${CACHE_HOST}
             - CACHE_PORT=${CACHE_PORT}
             - CACHE_PASSWORD=${CACHE_PASSWORD}
             - SQID_ALPHABET=${SQID_ALPHABET}
             - JWT_SECRET=${JWT_SECRET:-secret-key}
             - BASE_URL=${BASE_URL:-http://crescendo-streaming:${STREAMING_SERVICE_PORT:-8081}}
+        volumes:
+            - postgres-certs:/certs:ro
         depends_on:
             postgresql:
-                condition: service_healthy 
+                condition: service_healthy
         restart: always
 
     dragonfly:
@@ -113,13 +165,18 @@ services:
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_SSL_MODE=verify-full
+            - POSTGRES_SSL_ROOT_CERT=/certs/ca.crt
             - MONGODB_HOST=${MONGODB_HOST:-mongodb}
             - MONGODB_PORT=${MONGODB_PORT:-27017}
             - MONGODB_USER=${MONGODB_USER:-admin}
             - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
+        volumes:
+            - postgres-certs:/certs:ro
         restart: "no"
 volumes:
     postgres-data:
     mongo-data:
     mongo-config:
     dragonfly-data:
+    postgres-certs:

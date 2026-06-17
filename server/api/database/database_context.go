@@ -29,12 +29,26 @@ func NewConnection() (*sql.DB, error) {
 	password := os.Getenv("POSTGRES_PASSWORD")
 	dbname := os.Getenv("POSTGRES_DB")
 
-	if host == "" || port == "" || user == "" || password == "" || dbname == "" {
-		log.Fatal("Database credentials are not fully set in the environment variables")
+	sslMode := os.Getenv("POSTGRES_SSL_MODE")
+	sslRootCert := os.Getenv("POSTGRES_SSL_ROOT_CERT")
+
+	if sslMode == "" {
+		sslMode = "disable"
 	}
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		host,
+		port,
+		user,
+		password,
+		dbname,
+		sslMode,
+	)
+
+	if sslRootCert != "" {
+		dsn += fmt.Sprintf(" sslrootcert=%s", sslRootCert)
+	}
 
 	DB, err := sql.Open("postgres", dsn)
 
