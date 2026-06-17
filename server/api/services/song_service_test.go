@@ -56,30 +56,38 @@ func TestPlaySong_Success(t *testing.T) {
 func TestSearchSongs(t *testing.T) {
 	check := require.New(t)
 
-	referenceSongs := []models.SongSearchResult{
-		{
-			Id:          1,
-			Title:       "Blinding Lights",
-			ArtistNames: "The Weeknd",
-			AlbumTitles: "After Hours",
-		},
-	}
-
 	repo := mockSongRepository{
-		searchByTitleFunc: func(title string) ([]models.SongSearchResult, error) {
-			if title == "Blinding Lights" {
-				return referenceSongs, nil
-			}
-			return []models.SongSearchResult{}, nil
+		findByNameLikeFunc: func(name string) ([]models.SongPreviewWithArtists, error) {
+			return []models.SongPreviewWithArtists{
+				{
+					Id:       5,
+					Title:    "Song Title",
+					Duration: 125,
+					Artists: []models.ArtistLabel{
+						{
+							Id:   1,
+							Name: "Artist 1",
+						},
+						{
+							Id:   2,
+							Name: "Artist 2",
+						},
+					},
+				},
+			}, nil
 		},
 	}
-
 	service := services.NewSongService(repo)
 
-	fetchedSongs, err := service.SearchSongs("Blinding Lights")
-	check.NoError(err)
-	check.Equal(referenceSongs, fetchedSongs)
+	songs, err := service.SearchSongs("Song")
 
-	_, err = service.SearchSongs("")
-	check.Error(err)
+	check.NoError(err)
+	check.NotEmpty(songs)
+	check.Len(songs, 1)
+	check.Equal(5, songs[0].Id)
+	check.Equal("Song Title", songs[0].Title)
+	check.Equal(125, songs[0].Duration)
+	check.NotEmpty(songs[0].Artists)
+	check.Equal(models.ArtistLabel{Id: 1, Name: "Artist 1"}, songs[0].Artists[0])
+	check.Equal(models.ArtistLabel{Id: 2, Name: "Artist 2"}, songs[0].Artists[1])
 }

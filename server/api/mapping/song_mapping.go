@@ -37,27 +37,31 @@ func SongPreviewListToDTO(encoder security.Encoder, list []models.SongPreview) (
 	return songsDTO, nil
 }
 
-type SongSearchResultDTO struct {
-	Id          string `json:"id"`
-	Title       string `json:"title"`
-	Duration    int    `json:"duration"`
-	ArtistNames string `json:"artist_names"`
-	AlbumTitles string `json:"album_titles"`
-}
-
-func SongSearchResultListToDTO(encoder security.Encoder, list []models.SongSearchResult) ([]SongSearchResultDTO, error) {
-	var songsDTO []SongSearchResultDTO
+func SongPreviewListWithArtistsToDTO(encoder security.Encoder, list []models.SongPreviewWithArtists) ([]SongPreviewWithArtistsDTO, error) {
+	var songsDTO []SongPreviewWithArtistsDTO
 	for _, song := range list {
 		hashedId, err := encoder.Encode(song.Id)
 		if err != nil {
-			return []SongSearchResultDTO{}, nil
+			return []SongPreviewWithArtistsDTO{}, nil
 		}
-		songsDTO = append(songsDTO, SongSearchResultDTO{
-			Id:          hashedId,
-			Title:       song.Title,
-			Duration:    song.Duration,
-			ArtistNames: song.ArtistNames,
-			AlbumTitles: song.AlbumTitles,
+		var artistsDTO []ArtistLabelDTO
+
+		for _, artist := range song.Artists {
+			hashedArtistID, err := encoder.Encode(artist.Id)
+			if err != nil {
+				return []SongPreviewWithArtistsDTO{}, err
+			}
+
+			artistsDTO = append(artistsDTO, ArtistLabelDTO{
+				Id:   hashedArtistID,
+				Name: artist.Name,
+			})
+		}
+		songsDTO = append(songsDTO, SongPreviewWithArtistsDTO{
+			Id:       hashedId,
+			Title:    song.Title,
+			Duration: song.Duration,
+			Artists:  artistsDTO,
 		})
 	}
 	return songsDTO, nil
@@ -66,6 +70,13 @@ func SongSearchResultListToDTO(encoder security.Encoder, list []models.SongSearc
 type ArtistLabelDTO struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type SongPreviewWithArtistsDTO struct {
+	Id       string           `json:"id"`
+	Title    string           `json:"title"`
+	Duration int              `json:"duration"`
+	Artists  []ArtistLabelDTO `json:"artists"`
 }
 
 type PlaybackDataDTO struct {

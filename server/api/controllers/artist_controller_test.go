@@ -30,6 +30,17 @@ func (m *MockArtistService) GetArtist(id int) (models.Artist, error) {
 	}, nil
 }
 
+func (m *MockArtistService) GetAllArtist() ([]models.Artist, error) {
+	return []models.Artist{
+		{
+			Id:          5,
+			Name:        "ABBA",
+			Information: "Description of the artist",
+			ImageUrl:    "a/dfv/gf.png",
+		},
+	}, nil
+}
+
 func (m *MockArtistService) GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error) {
 	return []models.AlbumPreview{
 		{
@@ -62,20 +73,6 @@ func (m *MockArtistService) GetArtistSongPreviews(id int) ([]models.SongPreview,
 			Duration: 332,
 		},
 	}, nil
-}
-
-func (m *MockArtistService) SearchArtists(name string) ([]models.Artist, error) {
-	if name == "ABBA" {
-		return []models.Artist{
-			{
-				Id:          5,
-				Name:        "ABBA",
-				Information: "Description of the artist",
-				ImageUrl:    "a/dfv/gf.png",
-			},
-		}, nil
-	}
-	return []models.Artist{}, nil
 }
 
 func TestGetArtist(t *testing.T) {
@@ -192,7 +189,7 @@ func TestGetArtistSongPreview(t *testing.T) {
 	check.Equal(332, response[1].Duration)
 }
 
-func TestSearchArtistsByName(t *testing.T) {
+func TestGetAllArtist(t *testing.T) {
 	check := require.New(t)
 
 	service := &MockArtistService{}
@@ -207,17 +204,19 @@ func TestSearchArtistsByName(t *testing.T) {
 		Artist: controllers.NewArtistController(service, sqEncoder),
 	})
 
-	req, err := http.NewRequest(http.MethodGet, "/artists/search?name=ABBA", nil)
+	req, err := http.NewRequest(http.MethodGet, "/artists", nil)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)
 	check.Equal(http.StatusOK, w.Code)
-
 	var response []mapping.ArtistDTO
+
 	err = json.Unmarshal(w.Body.Bytes(), &response)
 	check.NoError(err)
 
 	check.Len(response, 1)
 	check.Equal([]uint64{uint64(5)}, sq.Decode(response[0].Id))
 	check.Equal("ABBA", response[0].Name)
+	check.Equal("Description of the artist", response[0].Information)
+	check.Equal("a/dfv/gf.png", response[0].ImageUrl)
 }

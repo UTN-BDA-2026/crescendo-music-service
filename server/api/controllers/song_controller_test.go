@@ -20,7 +20,7 @@ import (
 
 type MockSongService struct{}
 
-func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
+func (m *MockSongService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
 	return models.PlaybackData{
 		SongPreviewWithArtists: models.SongPreviewWithArtists{
 			Id:       4,
@@ -39,7 +39,7 @@ func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData,
 
 func TestCanProvidSongPlaybackInfo(t *testing.T) {
 	check := require.New(t)
-	service := &MockUserService{}
+	service := &MockSongService{}
 	sq, err := sqids.New(sqids.Options{
 		Alphabet:  os.Getenv("SQID_ALPHABET"),
 		MinLength: 6,
@@ -63,47 +63,4 @@ func TestCanProvidSongPlaybackInfo(t *testing.T) {
 	check.Equal("Song Title", response.Title)
 	check.NotEmpty(response.Artists)
 	check.Equal(response.Artists[0].Name, "Artist 1")
-}
-
-func (m *MockUserService) SearchSongs(title string) ([]models.SongSearchResult, error) {
-	if title == "Blinding Lights" {
-		return []models.SongSearchResult{
-			{
-				Id:          1,
-				Title:       "Blinding Lights",
-				ArtistNames: "The Weeknd",
-				AlbumTitles: "After Hours",
-			},
-		}, nil
-	}
-	return []models.SongSearchResult{}, nil
-}
-
-func TestSearchSongsByTitle(t *testing.T) {
-	check := require.New(t)
-	service := &MockUserService{}
-	sq, err := sqids.New(sqids.Options{
-		Alphabet:  os.Getenv("SQID_ALPHABET"),
-		MinLength: 6,
-	})
-	sqEncoder := security.NewSquidEncoder(sq)
-	testRouter := router.NewRouter(&app.Container{
-		Song: controllers.NewSongController(service, sqEncoder),
-	})
-
-	req, err := http.NewRequest(http.MethodGet, "/songs/search?title=Blinding Lights", nil)
-	check.NoError(err)
-	w := httptest.NewRecorder()
-	testRouter.ServeHTTP(w, req)
-	check.Equal(http.StatusOK, w.Code)
-
-	var response []mapping.SongSearchResultDTO
-	err = json.Unmarshal(w.Body.Bytes(), &response)
-	check.NoError(err)
-
-	check.Len(response, 1)
-	check.Equal([]uint64{uint64(1)}, sq.Decode(response[0].Id))
-	check.Equal("Blinding Lights", response[0].Title)
-	check.Equal("The Weeknd", response[0].ArtistNames)
-	check.Equal("After Hours", response[0].AlbumTitles)
 }

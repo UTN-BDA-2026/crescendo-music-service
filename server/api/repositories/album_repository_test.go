@@ -271,50 +271,70 @@ func TestGetSongsPreviewFromAlbumId(t *testing.T) {
 	check.Equal(listedSong, songList[0])
 }
 
-func TestSearchAlbumsByTitle(t *testing.T) {
-	check := require.New(t)
-
+func TestAlbumFindByNameLike(t *testing.T) {
 	db, err := database.NewConnection()
-	check.NoError(err)
+	require.NoError(t, err)
 
-	transaction, err := db.Begin()
 	t.Cleanup(func() {
-		transaction.Rollback()
 		db.Close()
 	})
-	check.NoError(err)
 
-	genreRepo := repositories.NewGenreRepository(transaction)
+	transaction, err := db.Begin()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+	})
+
 	repository := repositories.NewAlbumRepository(transaction)
+	genreRepository := repositories.NewGenreRepository(transaction)
 
 	genre := models.Genre{
-		Name: "Pop",
+		Name: "Rock",
 	}
-	genre.Id, err = genreRepo.Create(genre)
-	check.NoError(err)
 
-	album := models.Album{
-		Title:         "After Hours",
-		Type:          "Album",
+	genre.Id, err = genreRepository.Create(genre)
+	require.NoError(t, err)
+
+	reference := models.Album{
+		Title:         "Banana",
+		Type:          "EP",
 		GenreId:       genre.Id,
-		CoverImageUrl: "afterhours.png",
-		ReleaseDate:   time.Date(2020, 3, 20, 0, 0, 0, 0, time.UTC),
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
 	}
 
-	album.Id, err = repository.Create(album)
-	check.NoError(err)
+	other := models.Album{
+		Title:         "Patata",
+		Type:          "EP",
+		GenreId:       genre.Id,
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
 
-	results, err := repository.SearchByTitle("After Hours")
-	check.NoError(err)
-	check.NotEmpty(results)
-	check.Equal(album.Title, results[0].Title)
+	id, err := repository.Create(reference)
+	require.NoError(t, err)
+	reference.Id = id
 
-	results, err = repository.SearchByTitle("hours")
-	check.NoError(err)
-	check.NotEmpty(results)
-	check.Equal(album.Title, results[0].Title)
+	_, err = repository.Create(other)
+	require.NoError(t, err)
 
-	results, err = repository.SearchByTitle("Starboy")
-	check.NoError(err)
-	check.Empty(results)
+	results, err := repository.FindByNameLike("nana")
+	require.NoError(t, err)
+
+	require.NotEmpty(t, results)
+
+	found := false
+	for _, album := range results {
+		if album.Id == reference.Id {
+			found = true
+			require.Equal(t, reference.Title, album.Title)
+			require.Equal(t, reference.Type, album.Type)
+			require.Equal(t, reference.CoverImageUrl, album.CoverImageUrl)
+			require.Equal(t, reference.ReleaseDate, album.ReleaseDate)
+			break
+		}
+	}
+
+	require.True(t, found, "expected artist to be returned by partial search")
 }

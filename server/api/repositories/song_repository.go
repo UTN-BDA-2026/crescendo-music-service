@@ -13,7 +13,7 @@ type SongRepository interface {
 	Delete(id int) error
 	AddArtistToSong(artistId int, songId int) error
 	GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error)
-	SearchByTitle(title string) ([]models.SongSearchResult, error)
+	FindByNameLike(name string) ([]models.SongPreviewWithArtists, error)
 }
 
 type songRepository struct {
@@ -191,44 +191,73 @@ func (r songRepository) GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLa
 	return artists, nil
 }
 
-func (r songRepository) SearchByTitle(title string) ([]models.SongSearchResult, error) {
+func (r songRepository) FindByNameLike(name string) ([]models.SongPreviewWithArtists, error) {
 	rows, err := r.db.Query(`
-		SELECT 
-			s.id, 
-			s.title, 
+		SELECT
+			s.id,
+			s.title,
 			s.duration,
-			COALESCE(string_agg(DISTINCT a.name, ', '), '') AS artist_names,
-			COALESCE(string_agg(DISTINCT al.title, ', '), '') AS album_titles
+			a.id,
+			a.name
 		FROM songs s
-		LEFT JOIN artists_songs as_rel ON s.id = as_rel.song_id
-		LEFT JOIN artists a ON as_rel.artist_id = a.id
-		LEFT JOIN albums_songs al_rel ON s.id = al_rel.song_id
-		LEFT JOIN albums al ON al_rel.album_id = al.id
+		JOIN artists_songs ars ON ars.song_id = s.id
+		JOIN artists a ON a.id = ars.artist_id
 		WHERE s.title ILIKE '%' || $1 || '%'
-		GROUP BY s.id, s.title, s.duration
-	`, title)
+		ORDER BY similarity(s.title, $1) DESC
+	`, name)
+
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var songs []models.SongSearchResult
+	songsMap := make(map[int]*models.SongPreviewWithArtists)
+
 	for rows.Next() {
-		var song models.SongSearchResult
-		if err := rows.Scan(
-			&song.Id,
-			&song.Title,
-			&song.Duration,
-			&song.ArtistNames,
-			&song.AlbumTitles,
-		); err != nil {
+		var (
+			songID     int
+			title      string
+			duration   int
+			artistID   int
+			artistName string
+		)
+
+		err := rows.Scan(
+			&songID,
+			&title,
+			&duration,
+			&artistID,
+			&artistName,
+		)
+		if err != nil {
 			return nil, err
 		}
-		songs = append(songs, song)
+
+		song, exists := songsMap[songID]
+		if !exists {
+			song = &models.SongPreviewWithArtists{
+				Id:       songID,
+				Title:    title,
+				Duration: duration,
+				Artists:  []models.ArtistLabel{},
+			}
+			songsMap[songID] = song
+		}
+
+		song.Artists = append(song.Artists, models.ArtistLabel{
+			Id:   artistID,
+			Name: artistName,
+		})
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, err
+	}
+
+	songs := make([]models.SongPreviewWithArtists, 0, len(songsMap))
+
+	for _, song := range songsMap {
+		songs = append(songs, *song)
 	}
 
 	return songs, nil

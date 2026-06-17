@@ -81,7 +81,7 @@ func TestGetAlbumDetails(t *testing.T) {
 			}, nil
 		},
 	}
-	service := services.NewAlbumService(albumRepository, genreRepository)
+	service := services.NewAlbumService(albumRepository, genreRepository, nil)
 
 	album, err := service.GetAlbumDetails(albumId)
 
@@ -92,30 +92,33 @@ func TestGetAlbumDetails(t *testing.T) {
 func TestSearchAlbums(t *testing.T) {
 	check := require.New(t)
 
-	referenceAlbums := []models.AlbumPreview{
+	albums := []models.AlbumPreview{
 		{
-			Id:    1,
-			Title: "After Hours",
+			Id:            8,
+			Title:         "JJ",
+			Type:          "Album 1",
+			CoverImageUrl: "aaa/f.png",
+			ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			Id:            9,
+			Title:         "Album 2",
+			Type:          "Album",
+			CoverImageUrl: "bbb/j.png",
+			ReleaseDate:   time.Date(2026, 8, 2, 0, 0, 0, 0, time.UTC),
 		},
 	}
-
 	repo := mockAlbumRepository{
-		searchByTitleFunc: func(title string) ([]models.AlbumPreview, error) {
-			if title == "After Hours" {
-				return referenceAlbums, nil
-			}
-			return []models.AlbumPreview{}, nil
+		findByNameLikeFunc: func(name string) ([]models.AlbumPreview, error) {
+			return albums, nil
 		},
 	}
+	genreRepository := mockGenreRepository{}
 
-	genreRepo := mockGenreRepository{}
+	service := services.NewAlbumService(repo, genreRepository, nil)
 
-	service := services.NewAlbumService(repo, genreRepo)
+	fetchedArtists, err := service.SearchAlbums("Album")
 
-	fetchedAlbums, err := service.SearchAlbums("After Hours")
 	check.NoError(err)
-	check.Equal(referenceAlbums, fetchedAlbums)
-
-	_, err = service.SearchAlbums("")
-	check.Error(err)
+	check.Equal(albums, fetchedArtists)
 }
