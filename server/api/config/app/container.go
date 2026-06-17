@@ -16,6 +16,7 @@ type Container struct {
 	Song   *controllers.SongController
 	Album  *controllers.AlbumController
 	Artist *controllers.ArtistController
+	Search *controllers.SearchController
 }
 
 func NewContainer(db database.DBTX) *Container {
@@ -43,10 +44,13 @@ func NewContainer(db database.DBTX) *Container {
 	artistService := services.NewArtistService(artistRepo, cache)
 	artistController := controllers.NewArtistController(artistService, idEncoder)
 
+	searchController := controllers.NewSearchController(artistService, songService, albumService, idEncoder)
+
 	return &Container{
 		User:   userController,
 		Song:   songController,
 		Album:  albumController,
 		Artist: artistController,
+		Search: searchController,
 	}
 }

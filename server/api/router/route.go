@@ -8,8 +8,8 @@ import (
 )
 
 func NewRouter(container *app.Container) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "API Service Active",
@@ -27,6 +27,8 @@ func NewRouter(container *app.Container) *gin.Engine {
 	router.GET("/artists/:id", container.Artist.GetArtist)
 	router.GET("/artists/:id/albums", container.Artist.GetArtistAlbumPreviews)
 	router.GET("/artists/:id/songs", container.Artist.GetArtistSongPreviews)
+
+	router.GET("/search", container.Search.SearchByName)
 
 	return router
 }
