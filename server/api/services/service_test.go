@@ -51,6 +51,7 @@ type mockSongRepository struct {
 	deleteFunc                        func(id int) error
 	getArtistsForPlaybackBySongIdFunc func(id int) ([]models.ArtistLabel, error)
 	addArtistToSongFunc               func(artistId int, songId int) error
+	findByNameLikeFunc                func(name string) ([]models.SongPreviewWithArtists, error)
 }
 
 func (m mockSongRepository) Create(song models.Song) (int, error) {
@@ -77,6 +78,10 @@ func (m mockSongRepository) AddArtistToSong(artistId int, songId int) error {
 	return m.addArtistToSongFunc(artistId, songId)
 }
 
+func (m mockSongRepository) FindByNameLike(name string) ([]models.SongPreviewWithArtists, error) {
+	return m.findByNameLikeFunc(name)
+}
+
 // Album Repository Mock
 
 type mockAlbumRepository struct {
@@ -86,6 +91,7 @@ type mockAlbumRepository struct {
 	deleteFunc                     func(id int) error
 	addSongToAlbumFunc             func(songId, albumId, trackPosition int) error
 	getSongsPreviewFromAlbumIdFunc func(id int) ([]models.ListedSong, error)
+	findByNameLikeFunc             func(name string) ([]models.AlbumPreview, error)
 }
 
 func (m mockAlbumRepository) Create(album models.Album) (int, error) {
@@ -110,6 +116,10 @@ func (m mockAlbumRepository) AddSongToAlbum(songId, albumId, trackPosition int) 
 
 func (m mockAlbumRepository) GetSongsPreviewFromAlbumId(id int) ([]models.ListedSong, error) {
 	return m.getSongsPreviewFromAlbumIdFunc(id)
+}
+
+func (m mockAlbumRepository) FindByNameLike(name string) ([]models.AlbumPreview, error) {
+	return m.findByNameLikeFunc(name)
 }
 
 // Genre Repository Mock
@@ -148,6 +158,7 @@ type mockArtistRepository struct {
 	addAlbumToArtistFunc           func(albumId, artistId int) error
 	getAlbumPreviewsByArtistIdFunc func(id int) ([]models.AlbumPreview, error)
 	getArtistSongPreviewsFunc      func(id int) ([]models.SongPreview, error)
+	findByNameLikeFunc             func(name string) ([]models.Artist, error)
 }
 
 func (m mockArtistRepository) Create(artist models.Artist) (int, error) {
@@ -180,4 +191,8 @@ func (m mockArtistRepository) GetArtistSongPreviews(id int) ([]models.SongPrevie
 
 func (m mockArtistRepository) GetAll() ([]models.Artist, error) {
 	return m.getAllFunc()
+}
+
+func (m mockArtistRepository) FindByNameLike(name string) ([]models.Artist, error) {
+	return m.findByNameLikeFunc(name)
 }

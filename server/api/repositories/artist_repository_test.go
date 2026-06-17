@@ -311,3 +311,58 @@ func TestGetAllArtists(t *testing.T) {
 	check.Contains(fetchedArtists, artists[1])
 
 }
+
+func TestArtistFindByNameLike(t *testing.T) {
+	db, err := database.NewConnection()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		db.Close()
+	})
+
+	transaction, err := db.Begin()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+	})
+
+	repository := repositories.NewArtistRepository(transaction)
+
+	reference := models.Artist{
+		Name:        "Metallica",
+		Information: "American heavy metal band",
+		ImageUrl:    "metallica.png",
+	}
+
+	other := models.Artist{
+		Name:        "Megadeth",
+		Information: "American thrash metal band",
+		ImageUrl:    "megadeth.png",
+	}
+
+	id, err := repository.Create(reference)
+	require.NoError(t, err)
+	reference.Id = id
+
+	_, err = repository.Create(other)
+	require.NoError(t, err)
+
+	results, err := repository.FindByNameLike("Metal")
+	require.NoError(t, err)
+
+	require.NotEmpty(t, results)
+
+	found := false
+	for _, artist := range results {
+		if artist.Id == reference.Id {
+			found = true
+			require.Equal(t, reference.Name, artist.Name)
+			require.Equal(t, reference.Information, artist.Information)
+			require.Equal(t, reference.ImageUrl, artist.ImageUrl)
+			break
+		}
+	}
+
+	require.True(t, found, "expected artist to be returned by partial search")
+}

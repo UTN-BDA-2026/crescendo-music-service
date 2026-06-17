@@ -4,6 +4,7 @@ import (
 	"crescendo-api/database"
 	"crescendo-api/models"
 	"crescendo-api/repositories"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 
 type AlbumService interface {
 	GetAlbumDetails(id int) (models.AlbumDetailed, error)
+	SearchAlbums(name string) ([]models.AlbumPreview, error)
 }
 
 type albumService struct {
@@ -87,4 +89,21 @@ func (s albumService) GetAlbumDetails(id int) (models.AlbumDetailed, error) {
 	}
 
 	return result, nil
+}
+
+func (s albumService) SearchAlbums(name string) ([]models.AlbumPreview, error) {
+	if name == "" {
+		return []models.AlbumPreview{}, errors.New("invalid search string")
+	}
+	albums, err := s.repository.FindByNameLike(name)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []models.AlbumPreview{}, nil
+		}
+
+		log.Printf("fetching artist %v failed for search: %v", name, err)
+		return []models.AlbumPreview{}, errors.New("something went wrong")
+	}
+	return albums, nil
 }

@@ -88,3 +88,37 @@ func TestGetAlbumDetails(t *testing.T) {
 	check.NoError(err)
 	check.Equal(expectedAlbum, album)
 }
+
+func TestSearchAlbums(t *testing.T) {
+	check := require.New(t)
+
+	albums := []models.AlbumPreview{
+		{
+			Id:            8,
+			Title:         "JJ",
+			Type:          "Album 1",
+			CoverImageUrl: "aaa/f.png",
+			ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+		},
+		{
+			Id:            9,
+			Title:         "Album 2",
+			Type:          "Album",
+			CoverImageUrl: "bbb/j.png",
+			ReleaseDate:   time.Date(2026, 8, 2, 0, 0, 0, 0, time.UTC),
+		},
+	}
+	repo := mockAlbumRepository{
+		findByNameLikeFunc: func(name string) ([]models.AlbumPreview, error) {
+			return albums, nil
+		},
+	}
+	genreRepository := mockGenreRepository{}
+
+	service := services.NewAlbumService(repo, genreRepository, nil)
+
+	fetchedArtists, err := service.SearchAlbums("Album")
+
+	check.NoError(err)
+	check.Equal(albums, fetchedArtists)
+}

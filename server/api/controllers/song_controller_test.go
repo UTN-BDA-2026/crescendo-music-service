@@ -20,7 +20,7 @@ import (
 
 type MockSongService struct{}
 
-func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
+func (m *MockSongService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
 	return models.PlaybackData{
 		SongPreviewWithArtists: models.SongPreviewWithArtists{
 			Id:       4,
@@ -39,7 +39,7 @@ func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData,
 
 func TestCanProvidSongPlaybackInfo(t *testing.T) {
 	check := require.New(t)
-	service := &MockUserService{}
+	service := &MockSongService{}
 	sq, err := sqids.New(sqids.Options{
 		Alphabet:  os.Getenv("SQID_ALPHABET"),
 		MinLength: 6,

@@ -3,6 +3,7 @@ package repositories
 import (
 	"crescendo-api/database"
 	"crescendo-api/models"
+	"database/sql"
 	"fmt"
 )
 
@@ -13,6 +14,7 @@ type AlbumRepository interface {
 	Delete(id int) error
 	AddSongToAlbum(songId int, albumId int, trackPosition int) error
 	GetSongsPreviewFromAlbumId(id int) ([]models.ListedSong, error)
+	FindByNameLike(name string) ([]models.AlbumPreview, error)
 }
 
 type albumRepository struct {
@@ -220,4 +222,54 @@ func (r albumRepository) GetSongsPreviewFromAlbumId(albumId int) ([]models.Liste
 	}
 
 	return orderedSongs, nil
+}
+
+func (r albumRepository) FindByNameLike(name string) ([]models.AlbumPreview, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			id,
+			title,
+			type,
+			cover_image_url,
+			release_date
+		FROM albums
+		WHERE title ILIKE '%' || $1 || '%'
+		ORDER BY similarity(title, $1) DESC
+		LIMIT 20
+	`, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var albums []models.AlbumPreview
+
+	for rows.Next() {
+		var album models.AlbumPreview
+
+		var imageURL sql.NullString
+
+		err := rows.Scan(
+			&album.Id,
+			&album.Title,
+			&album.Type,
+			&imageURL,
+			&album.ReleaseDate,
+		)
+
+		if imageURL.Valid {
+			album.CoverImageUrl = imageURL.String
+		}
+		if err != nil {
+			return nil, err
+		}
+		album.ReleaseDate = album.ReleaseDate.UTC()
+		albums = append(albums, album)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return albums, nil
 }

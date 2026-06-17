@@ -17,6 +17,7 @@ type ArtistService interface {
 	GetArtistAlbumPreviews(id int) ([]models.AlbumPreview, error)
 	GetArtistSongPreviews(id int) ([]models.SongPreview, error)
 	GetAllArtist() ([]models.Artist, error)
+	SearchArtists(name string) ([]models.Artist, error)
 }
 
 type artistService struct {
@@ -175,6 +176,23 @@ func (s artistService) GetAllArtist() ([]models.Artist, error) {
 		if err == nil {
 			_ = s.cache.Set(key, string(data), 30*time.Minute)
 		}
+	}
+	return artists, nil
+}
+
+func (s artistService) SearchArtists(name string) ([]models.Artist, error) {
+	if name == "" {
+		return []models.Artist{}, errors.New("invalid search string")
+	}
+	artists, err := s.repository.FindByNameLike(name)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []models.Artist{}, nil
+		}
+
+		log.Printf("fetching artist %v failed for search: %v", name, err)
+		return []models.Artist{}, errors.New("something went wrong")
 	}
 	return artists, nil
 }
