@@ -131,6 +131,7 @@ services:
 
     crescendo-streaming:
         image: crescendo-streaming:1.0.0
+        build: ../server/streaming
         environment:
             - ENV=CONTAINER
             - STREAMING_SERVICE_PORT=${STREAMING_SERVICE_PORT}
@@ -166,6 +167,7 @@ services:
 
     crescendo-api:
         image: crescendo-api:1.0.0
+        build: ../server/api
         environment:
             - ENV=CONTAINER
             - POSTGRES_HOST=${POSTGRES_HOST:-postgresql}
