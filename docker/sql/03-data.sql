@@ -1,156 +1,406 @@
-INSERT INTO artists (id, name, information, image_url) VALUES
-(1,'The Weeknd','Canadian singer-songwriter',NULL),
-(2,'Dua Lipa','British-Albanian singer',NULL),
-(3,'Coldplay','British rock band',NULL),
-(4,'Taylor Swift','American singer-songwriter',NULL),
-(5,'Ed Sheeran','English singer-songwriter',NULL);
+BEGIN;
 
-INSERT INTO genres (id, name) VALUES
-(1,'Pop'),
-(2,'Synth-pop'),
-(3,'Rock'),
-(4,'Alternative Rock');
+-- =====================================================
+-- GENRES
+-- =====================================================
 
-INSERT INTO albums
-(id,title,type,genre_id,cover_image_url,release_date)
+INSERT INTO genres (name)
 VALUES
-(1,'After Hours','LP',2,'','2020-03-20'),
-(2,'Dawn FM','LP',2,'','2022-01-07'),
-(3,'Future Nostalgia','LP',1,'','2020-03-27'),
-(4,'A Head Full of Dreams','LP',3,'','2015-12-04'),
-(5,'Midnights','LP',1,'','2022-10-21'),
-(6,'Divide','LP',1,'','2017-03-03'),
-(7,'Equals','LP',1,'','2021-10-29');
+('Rock'),
+('Pop'),
+('Hip Hop'),
+('Reggaeton'),
+('Electronic'),
+('Jazz'),
+('Blues'),
+('Classical'),
+('Indie'),
+('Metal'),
+('Trap'),
+('House'),
+('Techno'),
+('R&B'),
+('Soul'),
+('Funk'),
+('Latin'),
+('K-Pop'),
+('Country'),
+('Ambient');
 
-INSERT INTO artists_albums VALUES
-(1,1),
-(1,2),
-(2,3),
-(3,4),
-(4,5),
-(5,6),
-(5,7);
+-- =====================================================
+-- USERS (5000)
+-- =====================================================
 
-INSERT INTO songs
-(id,title,file_id,genre_id,duration,bpm,release_date)
-VALUES
-(1,'Blinding Lights','file_001',2,200,171,'2020-03-20'),
-(2,'Save Your Tears','file_002',2,215,118,'2020-03-20'),
-(3,'In Your Eyes','file_003',2,238,100,'2020-03-20'),
+INSERT INTO users (
+    username,
+    email,
+    password_hash,
+    date_of_birth,
+    profile_image_url
+)
+SELECT
+    lower(
+        first_name || '_' ||
+        last_name || '_' || g
+    ),
+    lower(
+        first_name || '.' ||
+        last_name || g || '@mail.com'
+    ),
+    md5('pass_' || g),
+    DATE '1970-01-01' + ((random()*18000)::int),
+    'https://picsum.photos/200?user=' || g
+FROM generate_series(1,5000) g
+CROSS JOIN LATERAL (
+    SELECT
+        (ARRAY[
+            'Lucas','Mateo','Sofia','Emma','Valentina',
+            'Martina','Joaquin','Tomas','Camila','Nicolas',
+            'Julieta','Agustin','Thiago','Olivia','Benjamin',
+            'Lautaro','Paula','Mia','Renata','Bruno'
+        ])[((g % 20)+1)] AS first_name,
+        (ARRAY[
+            'Gomez','Perez','Lopez','Rodriguez','Fernandez',
+            'Diaz','Torres','Sanchez','Acosta','Ruiz',
+            'Molina','Castro','Silva','Vega','Herrera',
+            'Suarez','Romero','Medina','Navarro','Rojas'
+        ])[(((g*7)%20)+1)] AS last_name
+) n;
 
-(4,'Gasoline','file_004',2,212,123,'2022-01-07'),
-(5,'Sacrifice','file_005',2,188,122,'2022-01-07'),
-(6,'Take My Breath','file_006',2,221,121,'2022-01-07'),
+-- =====================================================
+-- ARTISTS (1000)
+-- =====================================================
 
-(7,'Dont Start Now','file_007',1,183,124,'2020-03-27'),
-(8,'Levitating','file_008',1,203,103,'2020-03-27'),
-(9,'Physical','file_009',1,193,147,'2020-03-27'),
+INSERT INTO artists (
+    name,
+    information,
+    image_url
+)
+SELECT
+    CASE (g % 4)
+        WHEN 0 THEN solo_name
+        WHEN 1 THEN first_name || ' ' || last_name
+        WHEN 2 THEN 'The ' || adjective || ' ' || noun
+        ELSE adjective || ' ' || noun
+    END AS name,
 
-(10,'Adventure of a Lifetime','file_010',3,251,112,'2015-12-04'),
-(11,'Hymn for the Weekend','file_011',3,258,90,'2015-12-04'),
-(12,'Up and Up','file_012',3,405,82,'2015-12-04'),
+    genre_desc || '. ' || style_desc || '. ' || career_desc || '.' AS information,
 
-(13,'Anti-Hero','file_013',1,201,97,'2022-10-21'),
-(14,'Lavender Haze','file_014',1,202,98,'2022-10-21'),
-(15,'Karma','file_015',1,204,90,'2022-10-21'),
+    'https://picsum.photos/300?artist=' || g
+FROM generate_series(1,1000) g
+CROSS JOIN LATERAL (
+    SELECT
+        solo_names[((g - 1) % array_length(solo_names, 1)) + 1] AS solo_name,
 
-(16,'Shape of You','file_016',1,233,96,'2017-03-03'),
-(17,'Perfect','file_017',1,263,63,'2017-03-03'),
-(18,'Castle on the Hill','file_018',1,261,135,'2017-03-03'),
+        first_names[((g - 1) % array_length(first_names, 1)) + 1] AS first_name,
 
-(19,'Bad Habits','file_019',1,231,126,'2021-10-29'),
-(20,'Shivers','file_020',1,207,141,'2021-10-29');
+        last_names[(((g - 1) / array_length(first_names, 1))
+            % array_length(last_names, 1)) + 1] AS last_name,
 
-INSERT INTO albums_songs VALUES
-(1,1,1),
-(2,1,2),
-(3,1,3),
+        adjectives[((g - 1) % array_length(adjectives, 1)) + 1] AS adjective,
 
-(1,2,4),
-(2,2,5),
-(3,2,6),
+        nouns[(((g - 1) / array_length(adjectives, 1))
+            % array_length(nouns, 1)) + 1] AS noun,
 
-(1,3,7),
-(2,3,8),
-(3,3,9),
+        genres[((g * 3) % array_length(genres, 1)) + 1] AS genre_desc,
 
-(1,4,10),
-(2,4,11),
-(3,4,12),
+        styles[((g * 7) % array_length(styles, 1)) + 1] AS style_desc,
 
-(1,5,13),
-(2,5,14),
-(3,5,15),
+        careers[((g * 11) % array_length(careers, 1)) + 1] AS career_desc
 
-(1,6,16),
-(2,6,17),
-(3,6,18),
+    FROM (
+        SELECT
+            ARRAY[
+                'Aurora','Nova','Eclipse','Luna','Solstice',
+                'Zenith','Ember','Atlas','Echo','Phoenix',
+                'Sierra','Orion','Lyric','Vega','Aria',
+                'Rogue','Indigo','Halo','Cascade','Vertex'
+            ] AS solo_names,
 
-(1,7,19),
-(2,7,20);
+            ARRAY[
+                'Alex','Luna','Mia','Leo','Nora',
+                'Theo','Ruby','Kai','Ivy','Milo',
+                'Aria','Noah','Zoe','Liam','Jade',
+                'Ethan','Ava','Mason','Willow','Ezra'
+            ] AS first_names,
 
-INSERT INTO artists_songs VALUES
+            ARRAY[
+                'Nova','Rivers','Stone','Vale','Knight',
+                'Woods','Skye','Blake','Hart','Cross',
+                'Lane','Fox','Reed','Brooks','West',
+                'Ray','Cole','Storm','Frost','Banks'
+            ] AS last_names,
 
--- After Hours
-(1,1,'Main Artist'),
-(1,2,'Main Artist'),
-(4,2,'Featured Artist'),
-(1,3,'Main Artist'),
+            ARRAY[
+                'Midnight','Golden','Silent','Electric','Scarlet',
+                'Crystal','Urban','Wild','Burning','Velvet',
+                'Hidden','Parallel','Northern','Solar','Neon',
+                'Cosmic','Ancient','Radiant','Magnetic','Endless'
+            ] AS adjectives,
 
--- Dawn FM
-(1,4,'Main Artist'),
-(1,5,'Main Artist'),
-(1,6,'Main Artist'),
+            ARRAY[
+                'Waves','Horizon','Bloom','Frequency','Mirage',
+                'Lights','Storm','Signal','Orbit','Motion',
+                'Galaxy','Forest','Journey','Rhythm','Vision',
+                'Whisper','Beacon','Empire','Ocean','Theory'
+            ] AS nouns,
 
--- Future Nostalgia
-(2,7,'Main Artist'),
-(2,8,'Main Artist'),
-(5,8,'Featured Artist'),
-(2,9,'Main Artist'),
+            ARRAY[
+                'Electronic music producer',
+                'Alternative rock band',
+                'Indie pop artist',
+                'Hip-hop performer',
+                'Jazz fusion musician',
+                'Ambient composer',
+                'Folk singer-songwriter',
+                'Progressive metal project',
+                'Synthwave producer',
+                'Experimental electronic act'
+            ] AS genres,
 
--- A Head Full of Dreams
-(3,10,'Main Artist'),
-(3,11,'Main Artist'),
-(1,11,'Featured Artist'),
-(3,12,'Main Artist'),
+            ARRAY[
+                'Known for atmospheric soundscapes',
+                'Blending modern and classic influences',
+                'Recognized for energetic live performances',
+                'Focused on emotional storytelling',
+                'Combining digital and acoustic elements',
+                'Exploring cinematic arrangements',
+                'Creating immersive musical experiences',
+                'Inspired by urban culture and travel',
+                'Mixing nostalgic and futuristic sounds',
+                'Pushing the boundaries of genre conventions'
+            ] AS styles,
 
--- Midnights
-(4,13,'Main Artist'),
-(4,14,'Main Artist'),
-(4,15,'Main Artist'),
-(2,15,'Featured Artist'),
+            ARRAY[
+                'Has built a loyal international fanbase',
+                'Regularly collaborates with emerging artists',
+                'Has released multiple acclaimed records',
+                'Frequently appears at music festivals',
+                'Continues to evolve with each release',
+                'Gained popularity through streaming platforms',
+                'Maintains an active touring schedule',
+                'Has earned recognition from critics worldwide',
+                'Is known for a distinctive artistic identity',
+                'Consistently attracts new listeners globally'
+            ] AS careers
+    ) t
+) a;
 
--- Divide
-(5,16,'Main Artist'),
-(5,17,'Main Artist'),
-(5,18,'Main Artist'),
+-- =====================================================
+-- ALBUMS (2000)
+-- =====================================================
 
--- Equals
-(5,19,'Main Artist'),
-(5,20,'Main Artist');
+INSERT INTO albums (
+    title,
+    type,
+    genre_id,
+    cover_image_url,
+    release_date
+)
+SELECT
+    adjective || ' ' || noun || ' Vol. ' || ((g % 8)+1),
+    (ARRAY['LP','EP','Single'])[((g % 3)+1)],
+    ((g % 20)+1),
+    'https://picsum.photos/400?album=' || g,
+    DATE '1995-01-01' + ((random()*11000)::int)
+FROM generate_series(1,2000) g
+CROSS JOIN LATERAL (
+    SELECT
+        (ARRAY[
+            'Lost','Hidden','Golden','Broken',
+            'Electric','Silent','Infinite','Dark',
+            'Parallel','Crimson','Neon','Fading',
+            'Burning','Silver','Midnight','Urban',
+            'Velvet','Solar','Cold','Endless'
+        ])[((g % 20)+1)] AS adjective,
+        (ARRAY[
+            'Horizons','Memories','Skies','Echoes',
+            'Roads','Stories','Dreams','Lights',
+            'Voices','Nights','Reflections','Waves',
+            'Signals','Visions','Patterns','Shapes',
+            'Moments','Distances','Hearts','Frequencies'
+        ])[(((g*11)%20)+1)] AS noun
+) x;
 
+-- =====================================================
+-- ARTISTS -> ALBUMS
+-- =====================================================
 
+INSERT INTO artists_albums (
+    artist_id,
+    album_id
+)
+SELECT
+    ((id - 1) % 1000) + 1,
+    id
+FROM albums;
+
+-- =====================================================
+-- SONGS (20000)
+-- =====================================================
+
+INSERT INTO songs (
+    title,
+    file_id,
+    genre_id,
+    duration,
+    bpm,
+    release_date
+)
+SELECT
+    adjective || ' ' || noun,
+    md5('song_' || g),
+    ((g % 20) + 1),
+    120 + (random() * 240)::int,
+    70 + (random() * 100)::int,
+    DATE '2000-01-01' + ((random() * 9000)::int)
+FROM generate_series(1,20000) g
+CROSS JOIN LATERAL (
+    SELECT
+        adjectives[((g - 1) % array_length(adjectives, 1)) + 1] AS adjective,
+        nouns[(((g - 1) / array_length(adjectives, 1))
+               % array_length(nouns, 1)) + 1] AS noun
+    FROM (
+        SELECT
+            ARRAY[
+                'Midnight','Golden','Broken','Silent','Electric','Fading',
+                'Parallel','Burning','Digital','Cold','Higher','Hidden',
+                'Lost','Dark','Crimson','Blue','Neon','Infinite','Urban','Velvet',
+                'Silver','Amber','Crystal','Scarlet','Cosmic','Wild',
+                'Ancient','Bright','Frozen','Lonely','Rapid','Gentle',
+                'Restless','Secret','Radiant','Magnetic','Electric','Endless',
+                'Dreaming','Fallen'
+            ] AS adjectives,
+            ARRAY[
+                'Heart','Dream','Memory','Sky','Light','Shadow','River','Signal',
+                'Horizon','Wave','Road','Voice','Fire','Motion','Storm','Love',
+                'Night','Distance','Frequency','Echo',
+                'Ocean','Thunder','Machine','Galaxy','Forest','Sunrise',
+                'Sunset','Rain','Mirror','Whisper','Pulse','Dust',
+                'Flame','Silence','Vision','Journey','Rhythm','Star',
+                'Moon','Beacon'
+            ] AS nouns
+    ) t
+) s;
+
+-- =====================================================
+-- ALBUMS -> SONGS
+-- 10 canciones por álbum
+-- =====================================================
+
+INSERT INTO albums_songs (
+    track_position,
+    album_id,
+    song_id
+)
+SELECT
+    ((song_id - 1) % 10) + 1,
+    ((song_id - 1) / 10) + 1,
+    song_id
+FROM generate_series(1,20000) song_id;
+
+-- =====================================================
+-- ARTISTA PRINCIPAL DE CADA CANCIÓN
+-- =====================================================
+
+INSERT INTO artists_songs (
+    artist_id,
+    song_id,
+    role
+)
+SELECT
+    aa.artist_id,
+    als.song_id,
+    'main'
+FROM albums_songs als
+JOIN artists_albums aa
+    ON aa.album_id = als.album_id;
+
+-- =====================================================
+-- FEATURINGS
+-- =====================================================
+
+INSERT INTO artists_songs (
+    artist_id,
+    song_id,
+    role
+)
+SELECT
+    ((song_id * 37) % 1000) + 1,
+    song_id,
+    'feat'
+FROM generate_series(1,20000) song_id
+WHERE song_id % 4 = 0
+ON CONFLICT DO NOTHING;
+
+-- =====================================================
+-- PLAYLISTS (50000)
+-- =====================================================
+
+INSERT INTO playlists (
+    title,
+    description,
+    user_id
+)
+SELECT
+    mood || ' Mix #' || g,
+    'Curated playlist for ' || mood,
+    ((g - 1) % 5000) + 1
+FROM generate_series(1,50000) g
+CROSS JOIN LATERAL (
+    SELECT
+        (ARRAY[
+            'Chill',
+            'Workout',
+            'Focus',
+            'Party',
+            'Driving',
+            'Coding',
+            'Relax',
+            'Summer',
+            'Night',
+            'Morning',
+            'Electronic',
+            'Rock',
+            'Latin',
+            'Indie',
+            'Deep House',
+            'Jazz'
+        ])[((g % 16)+1)] AS mood
+) p;
+
+COMMIT;
+
+-- =====================================================
+-- RESET SEQUENCES
+-- =====================================================
 
 SELECT setval(
-    pg_get_serial_sequence('artists', 'id'),
-    COALESCE((SELECT MAX(id) FROM artists), 1),
-    true
+    pg_get_serial_sequence('users','id'),
+    COALESCE((SELECT MAX(id) FROM users),1)
 );
 
 SELECT setval(
-    pg_get_serial_sequence('genres', 'id'),
-    COALESCE((SELECT MAX(id) FROM genres), 1),
-    true
+    pg_get_serial_sequence('artists','id'),
+    COALESCE((SELECT MAX(id) FROM artists),1)
 );
 
 SELECT setval(
-    pg_get_serial_sequence('albums', 'id'),
-    COALESCE((SELECT MAX(id) FROM albums), 1),
-    true
+    pg_get_serial_sequence('albums','id'),
+    COALESCE((SELECT MAX(id) FROM albums),1)
 );
 
 SELECT setval(
-    pg_get_serial_sequence('songs', 'id'),
-    COALESCE((SELECT MAX(id) FROM songs), 1),
-    true
+    pg_get_serial_sequence('songs','id'),
+    COALESCE((SELECT MAX(id) FROM songs),1)
+);
+
+SELECT setval(
+    pg_get_serial_sequence('genres','id'),
+    COALESCE((SELECT MAX(id) FROM genres),1)
+);
+
+SELECT setval(
+    pg_get_serial_sequence('playlists','id'),
+    COALESCE((SELECT MAX(id) FROM playlists),1)
 );

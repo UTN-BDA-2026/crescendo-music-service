@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
@@ -82,24 +83,23 @@ func main() {
 	// =========================
 	// 3. ASSIGN FILES ROUND-ROBIN
 	// =========================
-	i := 0
+
+	rand.Shuffle(len(songIDs), func(i, j int) {
+		songIDs[i], songIDs[j] = songIDs[j], songIDs[i]
+	})
+
 	for _, songID := range songIDs {
+		file := files[rand.Intn(len(files))]
 
-		file := files[i%len(files)]
-
-		_, err := db.Exec(`
-			UPDATE songs
-			SET file_id = $1
-			WHERE id = $2
-		`, file, songID)
+		_, err := db.Exec(
+			`UPDATE songs SET file_id = $1 WHERE id = $2`,
+			file,
+			songID,
+		)
 
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Printf("Song %d -> File %s\n", songID, file)
-
-		i++
 	}
 
 	fmt.Println("Seed completed")
