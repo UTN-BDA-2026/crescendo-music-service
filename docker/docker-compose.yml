@@ -253,6 +253,20 @@ services:
         volumes:
             - postgres-certs:/certs:ro
         restart: "no"
+    client:
+        image: nginx:alpine
+        container_name: crescendo-client
+        restart: always
+        volumes:
+            - ../client:/usr/share/nginx/html:ro
+        networks:
+            - web-net
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.crescendo-client.rule=Host(`crescendo.localhost`)"
+            - "traefik.http.routers.crescendo-client.tls=${ENABLE_TLS:-true}"
+            - "traefik.http.services.crescendo-client.loadbalancer.server.port=80"
+            - "traefik.docker.network=web-net"
 volumes:
     postgres-data:
     mongo-data:
