@@ -15,5 +15,5 @@ func main() {
 	container := app.NewContainer(db)
 	router := router.NewRouter(container)
 
-	router.Run(":8080")
+	router.Run(":8082")
 }

@@ -1,6 +1,30 @@
 name: crescendo-music-service
 
 services:
+    reverse-proxy:
+        image: traefik:v3
+        container_name: traefik
+        restart: unless-stopped
+        environment:
+        - DOCKER_API_VERSION=1.43
+        security_opt:
+            - no-new-privileges:true
+        ports:
+            - 80:80
+            - 443:443
+            - ${CACHE_PORT}:${CACHE_PORT}
+            - ${MONGODB_PORT}:${MONGODB_PORT}
+            - ${POSTGRES_PORT}:${POSTGRES_PORT}
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+            - ./config/config.yml:/etc/traefik/config.yml:ro
+            - ./certs:/etc/certs:ro
+        networks:
+            - web-net
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.traefik=true"
     cert-init:
         image: alpine:3.22
         command: >
@@ -36,9 +60,8 @@ services:
         restart: "no"
     postgresql:
         image: postgres:15.4-bullseye
-        ports:
-            - "5433:5432"
-
+        networks:
+            - web-net
         depends_on:
             cert-init:
                 condition: service_completed_successfully
@@ -48,7 +71,11 @@ services:
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - PGDATA=/var/lib/postgresql/data/pgdata
-
+        labels:
+            - "traefik.enable=true"
+            - "traefik.tcp.routers.postgresql.rule=HostSNI(`*`)"
+            - "traefik.tcp.routers.postgresql.entrypoints=postgresql"
+            - "traefik.tcp.services.postgresql.loadbalancer.server.port=5432"
         command:
             - postgres
             - -c
@@ -70,8 +97,8 @@ services:
 
     mongodb:
         image: mongo:8.0.4
-        ports:
-            - "27017:27017"
+        networks:
+            - web-net
         environment:
             - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER:-admin}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-admin123}
@@ -79,6 +106,11 @@ services:
             - mongo-data:/data/db
             - mongo-config:/data/configdb
         restart: always
+        labels:
+            - "traefik.enable=true"
+            - "traefik.tcp.routers.mongodb.rule=HostSNI(`*`)"
+            - "traefik.tcp.routers.mongodb.entrypoints=mongodb"
+            - "traefik.tcp.services.mongodb.loadbalancer.server.port=27017"
         healthcheck:
             test:
                 [
@@ -99,8 +131,6 @@ services:
 
     crescendo-streaming:
         image: crescendo-streaming:1.0.0
-        ports:
-            - "8081:8081"
         environment:
             - ENV=CONTAINER
             - STREAMING_SERVICE_PORT=${STREAMING_SERVICE_PORT}
@@ -109,6 +139,26 @@ services:
             - MONGODB_USER=${MONGODB_USER:-admin}
             - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
             - JWT_SECRET=${JWT_SECRET}
+        networks:
+            web-net:
+                aliases:
+                    - streaming.crescendo.localhost
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.crescendo-streaming.rule=Host(`streaming.crescendo.localhost`)"
+            - "traefik.http.routers.crescendo-streaming.tls=${ENABLE_TLS:-true}"
+            # Balanceo de cargas
+            - "traefik.http.services.crescendo-streaming.loadbalancer.server.port=8081"
+            # Rate limit
+            - "traefik.http.middlewares.crescendo-streaming.ratelimit.average=2"
+            - "traefik.http.middlewares.crescendo-streaming.ratelimit.period=1s"
+            - "traefik.http.middlewares.crescendo-streaming.ratelimit.burst=50"
+            # Patron cortocircuito
+            - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=LatencyAtQuantileMS(50.0) > 100"
+            - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=ResponseCodeRatio(500, 600, 0, 600) > 0.25"
+            - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=NetworkErrorRatio() > 0.5"
+            # Red
+            - "traefik.docker.network=web-net" 
         depends_on:
             mongodb:
                 condition: service_healthy
@@ -116,8 +166,6 @@ services:
 
     crescendo-api:
         image: crescendo-api:1.0.0
-        ports:
-            - "8080:8080"
         environment:
             - ENV=CONTAINER
             - POSTGRES_HOST=${POSTGRES_HOST:-postgresql}
@@ -135,6 +183,26 @@ services:
             - BASE_URL=${BASE_URL:-http://crescendo-streaming:${STREAMING_SERVICE_PORT:-8081}}
         volumes:
             - postgres-certs:/certs:ro
+        networks:
+            web-net:
+                aliases:
+                    - api.crescendo.localhost
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.crescendo-api.rule=Host(`api.crescendo.localhost`)"
+            - "traefik.http.routers.crescendo-api.tls=${ENABLE_TLS:-true}"
+            # Balanceo de cargas
+            - "traefik.http.services.crescendo-api.loadbalancer.server.port=8082"
+            # Rate limit
+            - "traefik.http.middlewares.crescendo-api.ratelimit.average=2"
+            - "traefik.http.middlewares.crescendo-api.ratelimit.period=1s"
+            - "traefik.http.middlewares.crescendo-api.ratelimit.burst=50"
+            # Patron cortocircuito
+            - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=LatencyAtQuantileMS(50.0) > 100"
+            - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=ResponseCodeRatio(500, 600, 0, 600) > 0.25"
+            - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=NetworkErrorRatio() > 0.5"
+            # Red
+            - "traefik.docker.network=web-net"  
         depends_on:
             postgresql:
                 condition: service_healthy
@@ -143,8 +211,14 @@ services:
     dragonfly:
         image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.34.2
         restart: always
-        ports:
-            - "6379:6379"
+        networks:
+            - web-net
+        labels:
+        - "traefik.enable=true"
+        - "traefik.tcp.routers.dragonfly.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.dragonfly.entrypoints=redis"
+        - "traefik.tcp.routers.dragonfly.service=dragonfly"
+        - "traefik.tcp.services.dragonfly.loadbalancer.server.port=6379"
         volumes:
             - dragonfly-data:/data
         ulimits:
@@ -155,6 +229,8 @@ services:
 
     seed:
         build: ./seed
+        networks:
+            - web-net
         depends_on:
             postgresql:
                 condition: service_healthy
@@ -180,3 +256,6 @@ volumes:
     mongo-config:
     dragonfly-data:
     postgres-certs:
+networks:
+  web-net:
+    name: web-net

@@ -9,7 +9,7 @@ import (
 
 func init() {
 	os.Setenv("JWT_SECRET", "secret-key")
-	os.Setenv("BASE_URL", "http://localhost:8080")
+	os.Setenv("BASE_URL", "http://localhost:8082")
 }
 
 // User Repository Mock
