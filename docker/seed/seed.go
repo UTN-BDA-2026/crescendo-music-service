@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/gridfs"
@@ -38,6 +39,20 @@ func main() {
 	// =========================
 	client := connectMongo(ctx)
 	defer client.Disconnect(ctx)
+
+	filesCollection := client.
+		Database("crescendo_audio").
+		Collection("fs.files")
+
+	count, err := filesCollection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if count > 0 {
+		fmt.Println("Audio files already uploaded")
+		return
+	}
 
 	bucket, _ := gridfs.NewBucket(client.Database("crescendo_audio"))
 
