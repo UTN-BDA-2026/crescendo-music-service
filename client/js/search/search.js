@@ -53,7 +53,7 @@ function renderArtists(artists) {
 
     container.innerHTML = `
         <h3 style="margin-bottom:10px;color:#111827;">
-            Artistas Encontrados (${artists.length})
+            Artistas
         </h3>
     `;
 
@@ -92,7 +92,7 @@ function renderAlbums(albums) {
 
     container.innerHTML = `
         <h3 style="margin-bottom:10px;color:#111827;">
-            Álbumes Encontrados (${albums.length})
+            Álbumes
         </h3>
     `;
 
@@ -140,7 +140,7 @@ function renderSongs(songs) {
 
     container.innerHTML = `
         <h3 style="margin-bottom:10px;color:#111827;">
-            Canciones Encontradas (${songs.length})
+            Canciones
         </h3>
     `;
 

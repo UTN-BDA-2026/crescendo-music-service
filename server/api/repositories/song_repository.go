@@ -204,6 +204,7 @@ func (r songRepository) FindByNameLike(name string) ([]models.SongPreviewWithArt
 		JOIN artists a ON a.id = ars.artist_id
 		WHERE s.title ILIKE '%' || $1 || '%'
 		ORDER BY similarity(s.title, $1) DESC
+		LIMIT 20
 	`, name)
 
 	if err != nil {
