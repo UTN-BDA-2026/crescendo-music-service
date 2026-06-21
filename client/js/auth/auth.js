@@ -41,12 +41,12 @@ export function initAuth(updateAuthUI) {
 
         if (res.ok) {
             msg.textContent = "Usuario creado";
-            msg.style.color = "green";
+            msg.className = "msg-success";
             e.target.reset();
         } else {
             const err = await res.json();
             msg.textContent = err.error;
-            msg.style.color = "red";
+            msg.className = "msg-error";
         }
     });
 

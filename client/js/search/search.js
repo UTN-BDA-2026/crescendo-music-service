@@ -52,7 +52,7 @@ function renderArtists(artists) {
     if (!artists.length) return;
 
     container.innerHTML = `
-        <h3 style="margin-bottom:10px;color:#111827;">
+        <h3 class="section-title">
             Artistas
         </h3>
     `;
@@ -62,18 +62,18 @@ function renderArtists(artists) {
         div.className = 'glass-card';
 
         div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:20px;">
+            <div class="card-content">
                 ${artist.image_url ? `
                     <img src="${artist.image_url}" 
                          alt="${artist.name}"
-                         style="width:60px;height:60px;border-radius:50%;object-fit:cover;">
+                         class="artist-img">
                 ` : ''}
                 
                 <div>
-                    <h4 style="margin:0;font-size:1.2em;color:#111827;">
+                    <h4 class="card-title">
                         ${artist.name}
                     </h4>
-                    <p style="color:#6b7280;margin:5px 0 0 0;font-size:.9em;">
+                    <p class="card-subtitle">
                         ${artist.information || 'Sin información adicional'}
                     </p>
                 </div>
@@ -91,7 +91,7 @@ function renderAlbums(albums) {
     if (!albums.length) return;
 
     container.innerHTML = `
-        <h3 style="margin-bottom:10px;color:#111827;">
+        <h3 class="section-title">
             Álbumes
         </h3>
     `;
@@ -101,27 +101,22 @@ function renderAlbums(albums) {
         div.className = 'glass-card';
 
         div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:20px;">
+            <div class="card-content">
                 ${album.cover_image_url ? `
                     <img src="${album.cover_image_url}"
                          alt="${album.title}"
-                         style="width:60px;height:60px;border-radius:4px;object-fit:cover;">
+                         class="album-img">
                 ` : ''}
 
                 <div>
-                    <h4 style="margin:0;font-size:1.2em;color:#111827;">
+                    <h4 class="card-title">
                         ${album.title}
-                        <span style="
-                            font-size:.7em;
-                            background:#e5e7eb;
-                            padding:2px 6px;
-                            border-radius:4px;
-                        ">
+                        <span class="badge">
                             ${album.type}
                         </span>
                     </h4>
 
-                    <p style="color:#6b7280;margin:5px 0 0 0;font-size:.9em;">
+                    <p class="card-subtitle">
                         Lanzamiento: ${new Date(album.release_date).toLocaleDateString()}
                     </p>
                 </div>
@@ -139,7 +134,7 @@ function renderSongs(songs) {
     if (!songs.length) return;
 
     container.innerHTML = `
-        <h3 style="margin-bottom:10px;color:#111827;">
+        <h3 class="section-title">
             Canciones
         </h3>
     `;
@@ -157,15 +152,15 @@ function renderSongs(songs) {
 
         div.innerHTML = `
             <div>
-                <strong style="color:#1f2937;font-size:1.1em;">
+                <strong class="song-title">
                     ${song.title}
                 </strong>
 
-                <span style="color:#4b5563;font-size:.9em;margin-left:5px;">
+                <span class="song-artist">
                     - ${artistNames}
                 </span>
 
-                <div style="color:#6b7280;font-size:.85em;margin-top:4px;">
+                <div class="song-duration">
                     Duración: ${m}:${s}
                 </div>
             </div>
@@ -195,7 +190,7 @@ function renderEmptyState(query, data) {
         songData.length === 0
     ) {
         document.getElementById('artist-results').innerHTML =
-            `<p style="color:#6b7280;">
+            `<p class="empty-state-text">
                 No se encontraron resultados para "${query}".
             </p>`;
     }

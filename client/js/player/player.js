@@ -109,13 +109,13 @@ export function initPlayerControls() {
 
         e.target.innerText = isRandom ? '🔀 (On)' : '🔀 (Off)';
         e.target.title = `Aleatorio (${isRandom ? 'Activado' : 'Desactivado'})`;
-        e.target.style.color = isRandom ? '#10b981' : 'white';
+        e.target.className = `player-btn ${isRandom ? 'btn-active-random' : 'btn-inactive'}`;
     });
 
     document.getElementById('btn-loop')?.addEventListener('click', (e) => {
         const modes = ['none', 'all', 'one'];
         const labels = ['🔁 (None)', '🔁 (All)', '🔂 (One)'];
-        const colors = ['white', '#10b981', '#3b82f6'];
+        const classes = ['btn-loop-none', 'btn-loop-all', 'btn-loop-one'];
 
         let idx = modes.indexOf(loopMode);
         idx = (idx + 1) % modes.length;
@@ -124,7 +124,7 @@ export function initPlayerControls() {
 
         e.target.innerText = labels[idx];
         e.target.title = `Repetir (${loopMode})`;
-        e.target.style.color = colors[idx];
+        e.target.className = `player-btn ${classes[idx]}`;
 
         const audioEl = document.getElementById('audio-player');
         audioEl.loop = loopMode === 'one';
