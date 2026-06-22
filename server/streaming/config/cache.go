@@ -10,17 +10,17 @@ import (
 )
 
 func ConnectRedis() (*redis.Client, error) {
-	host := os.Getenv("REDIS_HOST")
+	host := os.Getenv("CACHE_HOST")
 	if host == "" {
 		host = "redis"
 	}
 
-	port := os.Getenv("REDIS_PORT")
+	port := os.Getenv("CACHE_PORT")
 	if port == "" {
 		port = "6379"
 	}
 
-	password := os.Getenv("REDIS_PASSWORD")
+	password := os.Getenv("CACHE_PASSWORD")
 	db := 0
 
 	client := redis.NewClient(&redis.Options{
