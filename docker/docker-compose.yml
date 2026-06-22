@@ -1,18 +1,93 @@
 name: crescendo-music-service
 
 services:
+    reverse-proxy:
+        image: traefik:v3
+        container_name: traefik
+        restart: unless-stopped
+        environment:
+        - DOCKER_API_VERSION=1.43
+        security_opt:
+            - no-new-privileges:true
+        ports:
+            - 80:80
+            - 443:443
+            - ${CACHE_PORT}:${CACHE_PORT}
+            - ${MONGODB_PORT}:${MONGODB_PORT}
+            - ${POSTGRES_PORT}:${POSTGRES_PORT}
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
+            - ./config/config.yml:/etc/traefik/config.yml:ro
+            - ./certs:/etc/certs:ro
+        networks:
+            - web-net
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.traefik=true"
+    cert-init:
+        image: alpine:3.22
+        command: >
+            sh -c "
+            mkdir -p /certs &&
+            if [ ! -f /certs/ca.crt ]; then
+                apk add --no-cache openssl;
+
+                echo 'Generating CA...';
+
+                openssl genrsa -out /certs/ca.key 4096;
+
+                openssl req -x509 -new -nodes -key /certs/ca.key -sha256 -days 3650 -subj '/CN=crescendo-ca' -out /certs/ca.crt;
+
+                echo 'Generating server certificate...';
+
+                openssl genrsa -out /certs/server.key 4096;
+
+                printf 'subjectAltName=DNS:postgresql\n' > /tmp/server.ext;
+
+                openssl req -new -key /certs/server.key -subj '/CN=postgresql' -out /tmp/server.csr;
+
+                openssl x509 -req -in /tmp/server.csr -CA /certs/ca.crt -CAkey /certs/ca.key -CAcreateserial -out /certs/server.crt -days 3650 -sha256 -extfile /tmp/server.ext;
+
+                chown 999:999 /certs/server.key /certs/server.crt;
+
+                chmod 600 /certs/server.key;
+
+            fi
+            "
+        volumes:
+            - postgres-certs:/certs
+        restart: "no"
     postgresql:
         image: postgres:15.4-bullseye
-        ports:
-            - "5433:5432"
+        networks:
+            - web-net
+        depends_on:
+            cert-init:
+                condition: service_completed_successfully
+
         environment:
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_USER=${POSTGRES_USER}
             - PGDATA=/var/lib/postgresql/data/pgdata
+        labels:
+            - "traefik.enable=true"
+            - "traefik.tcp.routers.postgresql.rule=HostSNI(`*`)"
+            - "traefik.tcp.routers.postgresql.entrypoints=postgresql"
+            - "traefik.tcp.services.postgresql.loadbalancer.server.port=5432"
+        command:
+            - postgres
+            - -c
+            - ssl=on
+            - -c
+            - ssl_cert_file=/certs/server.crt
+            - -c
+            - ssl_key_file=/certs/server.key
         volumes:
             - ./sql:/docker-entrypoint-initdb.d
             - postgres-data:/var/lib/postgresql/data
+            - postgres-certs:/certs:ro
         restart: always
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -22,14 +97,20 @@ services:
 
     mongodb:
         image: mongo:8.0.4
-        ports:
-            - "27017:27017"
+        networks:
+            - web-net
         environment:
             - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USER:-admin}
             - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD:-admin123}
         volumes:
             - mongo-data:/data/db
+            - mongo-config:/data/configdb
         restart: always
+        labels:
+            - "traefik.enable=true"
+            - "traefik.tcp.routers.mongodb.rule=HostSNI(`*`)"
+            - "traefik.tcp.routers.mongodb.entrypoints=mongodb"
+            - "traefik.tcp.services.mongodb.loadbalancer.server.port=27017"
         healthcheck:
             test:
                 [
@@ -48,26 +129,10 @@ services:
             timeout: 5s
             retries: 10
 
-    redis:
-        image: redis:7.4-alpine
-        ports:
-            - "6379:6379"
-        environment:
-            - REDIS_PASSWORD=${REDIS_PASSWORD:-}
-        volumes:
-            - redis-data:/data
-        restart: always
-        command: redis-server ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
-        healthcheck:
-            test: ["CMD", "redis-cli", "ping"]
-            interval: 5s
-            timeout: 5s
-            retries: 10
 
     crescendo-streaming:
         image: crescendo-streaming:1.0.0
-        ports:
-            - "8081:8081"
+        build: ../server/streaming
         environment:
             - ENV=CONTAINER
             - STREAMING_SERVICE_PORT=${STREAMING_SERVICE_PORT}
@@ -75,21 +140,40 @@ services:
             - MONGODB_PORT=${MONGODB_PORT:-27017}
             - MONGODB_USER=${MONGODB_USER:-admin}
             - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
-            - REDIS_HOST=${REDIS_HOST:-redis}
-            - REDIS_PORT=${REDIS_PORT:-6379}
-            - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+            - CACHE_HOST=${CACHE_HOST:-dragonfly}
+            - CACHE_PORT=${CACHE_PORT:-6379}
+            - CACHE_PASSWORD=${CACHE_PASSWORD:-}
             - JWT_SECRET=${JWT_SECRET}
+        networks:
+            web-net:
+                aliases:
+                    - streaming.crescendo.localhost
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.crescendo-streaming.rule=Host(`streaming.crescendo.localhost`)"
+            - "traefik.http.routers.crescendo-streaming.tls=${ENABLE_TLS:-true}"
+            # Balanceo de cargas
+            - "traefik.http.services.crescendo-streaming.loadbalancer.server.port=8081"
+            # Rate limit
+            - "traefik.http.middlewares.crescendo-streaming.ratelimit.average=2"
+            - "traefik.http.middlewares.crescendo-streaming.ratelimit.period=1s"
+            - "traefik.http.middlewares.crescendo-streaming.ratelimit.burst=50"
+            # Patron cortocircuito
+            - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=LatencyAtQuantileMS(50.0) > 100"
+            - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=ResponseCodeRatio(500, 600, 0, 600) > 0.25"
+            - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=NetworkErrorRatio() > 0.5"
+            # Red
+            - "traefik.docker.network=web-net" 
         depends_on:
             mongodb:
                 condition: service_healthy
-            redis:
-                condition: service_healthy
+            dragonfly:
+                condition: service_started
         restart: always
 
     crescendo-api:
         image: crescendo-api:1.0.0
-        ports:
-            - "8080:8080"
+        build: ../server/api
         environment:
             - ENV=CONTAINER
             - POSTGRES_HOST=${POSTGRES_HOST:-postgresql}
@@ -97,15 +181,104 @@ services:
             - POSTGRES_USER=${POSTGRES_USER}
             - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_SSL_MODE=verify-full
+            - POSTGRES_SSL_ROOT_CERT=/certs/ca.crt
+            - CACHE_HOST=${CACHE_HOST}
+            - CACHE_PORT=${CACHE_PORT}
+            - CACHE_PASSWORD=${CACHE_PASSWORD}
             - SQID_ALPHABET=${SQID_ALPHABET}
             - JWT_SECRET=${JWT_SECRET:-secret-key}
             - BASE_URL=${BASE_URL:-http://crescendo-streaming:${STREAMING_SERVICE_PORT:-8081}}
+        volumes:
+            - postgres-certs:/certs:ro
+        networks:
+            web-net:
+                aliases:
+                    - api.crescendo.localhost
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.crescendo-api.rule=Host(`api.crescendo.localhost`)"
+            - "traefik.http.routers.crescendo-api.tls=${ENABLE_TLS:-true}"
+            # Balanceo de cargas
+            - "traefik.http.services.crescendo-api.loadbalancer.server.port=8082"
+            # Rate limit
+            - "traefik.http.middlewares.crescendo-api.ratelimit.average=2"
+            - "traefik.http.middlewares.crescendo-api.ratelimit.period=1s"
+            - "traefik.http.middlewares.crescendo-api.ratelimit.burst=50"
+            # Patron cortocircuito
+            - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=LatencyAtQuantileMS(50.0) > 100"
+            - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=ResponseCodeRatio(500, 600, 0, 600) > 0.25"
+            - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=NetworkErrorRatio() > 0.5"
+            # Red
+            - "traefik.docker.network=web-net"  
         depends_on:
             postgresql:
-                condition: service_healthy 
+                condition: service_healthy
         restart: always
 
+    dragonfly:
+        image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.34.2
+        restart: always
+        networks:
+            - web-net
+        labels:
+        - "traefik.enable=true"
+        - "traefik.tcp.routers.dragonfly.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.dragonfly.entrypoints=redis"
+        - "traefik.tcp.routers.dragonfly.service=dragonfly"
+        - "traefik.tcp.services.dragonfly.loadbalancer.server.port=6379"
+        volumes:
+            - dragonfly-data:/data
+        ulimits:
+            memlock: -1
+        environment:
+            - CACHE_PASSWORD=${CACHE_PASSWORD}
+        command: dragonfly --requirepass ${CACHE_PASSWORD}
+
+    seed:
+        image: crescendo-seed:1.0.0
+        build: ./seed
+        networks:
+            - web-net
+        depends_on:
+            postgresql:
+                condition: service_healthy
+            mongodb:
+                condition: service_healthy
+        environment:
+            - POSTGRES_HOST=${POSTGRES_HOST:-postgresql}
+            - POSTGRES_DB=${POSTGRES_DB}
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            - POSTGRES_SSL_MODE=verify-full
+            - POSTGRES_SSL_ROOT_CERT=/certs/ca.crt
+            - MONGODB_HOST=${MONGODB_HOST:-mongodb}
+            - MONGODB_PORT=${MONGODB_PORT:-27017}
+            - MONGODB_USER=${MONGODB_USER:-admin}
+            - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
+        volumes:
+            - postgres-certs:/certs:ro
+        restart: "no"
+    client:
+        image: nginx:alpine
+        container_name: crescendo-client
+        restart: always
+        volumes:
+            - ../client:/usr/share/nginx/html:ro
+        networks:
+            - web-net
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.crescendo-client.rule=Host(`crescendo.localhost`)"
+            - "traefik.http.routers.crescendo-client.tls=${ENABLE_TLS:-true}"
+            - "traefik.http.services.crescendo-client.loadbalancer.server.port=80"
+            - "traefik.docker.network=web-net"
 volumes:
     postgres-data:
     mongo-data:
-    redis-data:
+    mongo-config:
+    dragonfly-data:
+    postgres-certs:
+networks:
+  web-net:
+    name: web-net

@@ -9,7 +9,7 @@ import (
 
 func init() {
 	os.Setenv("JWT_SECRET", "secret-key")
-	os.Setenv("BASE_URL", "http://localhost:8080")
+	os.Setenv("BASE_URL", "http://localhost:8082")
 }
 
 // User Repository Mock
@@ -51,6 +51,7 @@ type mockSongRepository struct {
 	deleteFunc                        func(id int) error
 	getArtistsForPlaybackBySongIdFunc func(id int) ([]models.ArtistLabel, error)
 	addArtistToSongFunc               func(artistId int, songId int) error
+	findByNameLikeFunc                func(name string) ([]models.SongPreviewWithArtists, error)
 }
 
 func (m mockSongRepository) Create(song models.Song) (int, error) {
@@ -77,6 +78,10 @@ func (m mockSongRepository) AddArtistToSong(artistId int, songId int) error {
 	return m.addArtistToSongFunc(artistId, songId)
 }
 
+func (m mockSongRepository) FindByNameLike(name string) ([]models.SongPreviewWithArtists, error) {
+	return m.findByNameLikeFunc(name)
+}
+
 // Album Repository Mock
 
 type mockAlbumRepository struct {
@@ -86,6 +91,7 @@ type mockAlbumRepository struct {
 	deleteFunc                     func(id int) error
 	addSongToAlbumFunc             func(songId, albumId, trackPosition int) error
 	getSongsPreviewFromAlbumIdFunc func(id int) ([]models.ListedSong, error)
+	findByNameLikeFunc             func(name string) ([]models.AlbumPreview, error)
 }
 
 func (m mockAlbumRepository) Create(album models.Album) (int, error) {
@@ -110,6 +116,10 @@ func (m mockAlbumRepository) AddSongToAlbum(songId, albumId, trackPosition int) 
 
 func (m mockAlbumRepository) GetSongsPreviewFromAlbumId(id int) ([]models.ListedSong, error) {
 	return m.getSongsPreviewFromAlbumIdFunc(id)
+}
+
+func (m mockAlbumRepository) FindByNameLike(name string) ([]models.AlbumPreview, error) {
+	return m.findByNameLikeFunc(name)
 }
 
 // Genre Repository Mock
@@ -142,11 +152,13 @@ func (m mockGenreRepository) Delete(id int) error {
 type mockArtistRepository struct {
 	createFunc                     func(artist models.Artist) (int, error)
 	getByIdFunc                    func(id int) (models.Artist, error)
+	getAllFunc                     func() ([]models.Artist, error)
 	updateFunc                     func(artist models.Artist) (models.Artist, error)
 	deleteFunc                     func(id int) error
 	addAlbumToArtistFunc           func(albumId, artistId int) error
 	getAlbumPreviewsByArtistIdFunc func(id int) ([]models.AlbumPreview, error)
 	getArtistSongPreviewsFunc      func(id int) ([]models.SongPreview, error)
+	findByNameLikeFunc             func(name string) ([]models.Artist, error)
 }
 
 func (m mockArtistRepository) Create(artist models.Artist) (int, error) {
@@ -175,4 +187,12 @@ func (m mockArtistRepository) GetArtistAlbumPreviews(id int) ([]models.AlbumPrev
 
 func (m mockArtistRepository) GetArtistSongPreviews(id int) ([]models.SongPreview, error) {
 	return m.getArtistSongPreviewsFunc(id)
+}
+
+func (m mockArtistRepository) GetAll() ([]models.Artist, error) {
+	return m.getAllFunc()
+}
+
+func (m mockArtistRepository) FindByNameLike(name string) ([]models.Artist, error) {
+	return m.findByNameLikeFunc(name)
 }

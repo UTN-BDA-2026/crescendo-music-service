@@ -270,3 +270,71 @@ func TestGetSongsPreviewFromAlbumId(t *testing.T) {
 	check.Len(songList, 1)
 	check.Equal(listedSong, songList[0])
 }
+
+func TestAlbumFindByNameLike(t *testing.T) {
+	db, err := database.NewConnection()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		db.Close()
+	})
+
+	transaction, err := db.Begin()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+	})
+
+	repository := repositories.NewAlbumRepository(transaction)
+	genreRepository := repositories.NewGenreRepository(transaction)
+
+	genre := models.Genre{
+		Name: "Rock",
+	}
+
+	genre.Id, err = genreRepository.Create(genre)
+	require.NoError(t, err)
+
+	reference := models.Album{
+		Title:         "Banana",
+		Type:          "EP",
+		GenreId:       genre.Id,
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+
+	other := models.Album{
+		Title:         "Patata",
+		Type:          "EP",
+		GenreId:       genre.Id,
+		CoverImageUrl: "aaa/f.png",
+		ReleaseDate:   time.Date(2024, 4, 23, 0, 0, 0, 0, time.UTC),
+	}
+
+	id, err := repository.Create(reference)
+	require.NoError(t, err)
+	reference.Id = id
+
+	_, err = repository.Create(other)
+	require.NoError(t, err)
+
+	results, err := repository.FindByNameLike("nana")
+	require.NoError(t, err)
+
+	require.NotEmpty(t, results)
+
+	found := false
+	for _, album := range results {
+		if album.Id == reference.Id {
+			found = true
+			require.Equal(t, reference.Title, album.Title)
+			require.Equal(t, reference.Type, album.Type)
+			require.Equal(t, reference.CoverImageUrl, album.CoverImageUrl)
+			require.Equal(t, reference.ReleaseDate, album.ReleaseDate)
+			break
+		}
+	}
+
+	require.True(t, found, "expected artist to be returned by partial search")
+}

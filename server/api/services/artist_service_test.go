@@ -24,7 +24,7 @@ func TestGetArtist(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedArtist, err := service.GetArtist(artist.Id)
 
@@ -58,7 +58,7 @@ func TestGetArtistAlbums(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedAlbums, err := service.GetArtistAlbumPreviews(artistId)
 
@@ -90,7 +90,7 @@ func TestGetArtistSongPreviews(t *testing.T) {
 		},
 	}
 
-	service := services.NewArtistService(repo)
+	service := services.NewArtistService(repo, nil)
 
 	fetchedSongs, err := service.GetArtistSongPreviews(artistId)
 
@@ -98,4 +98,66 @@ func TestGetArtistSongPreviews(t *testing.T) {
 	check.Len(fetchedSongs, len(referenceSongs))
 	check.Equal(referenceSongs, fetchedSongs)
 
+}
+
+func TestGetAllArtist(t *testing.T) {
+	check := require.New(t)
+
+	artists := []models.Artist{
+		{
+			Id:          5,
+			Name:        "Artist 1",
+			Information: "Artist description",
+			ImageUrl:    "fvfu/erui.png",
+		},
+		{
+			Id:          7,
+			Name:        "Artist 2",
+			Information: "Artist description 4",
+			ImageUrl:    "fvfu/erui.png",
+		},
+	}
+	repo := mockArtistRepository{
+		getAllFunc: func() ([]models.Artist, error) {
+			return artists, nil
+		},
+	}
+
+	service := services.NewArtistService(repo, nil)
+
+	fetchedArtists, err := service.GetAllArtist()
+
+	check.NoError(err)
+	check.Equal(artists, fetchedArtists)
+}
+
+func TestSearchArtists(t *testing.T) {
+	check := require.New(t)
+
+	artists := []models.Artist{
+		{
+			Id:          5,
+			Name:        "Artist 1",
+			Information: "Artist description",
+			ImageUrl:    "fvfu/erui.png",
+		},
+		{
+			Id:          7,
+			Name:        "Artist 2",
+			Information: "Artist description 4",
+			ImageUrl:    "fvfu/erui.png",
+		},
+	}
+	repo := mockArtistRepository{
+		findByNameLikeFunc: func(name string) ([]models.Artist, error) {
+			return artists, nil
+		},
+	}
+
+	service := services.NewArtistService(repo, nil)
+
+	fetchedArtists, err := service.SearchArtists("Artist")
+
+	check.NoError(err)
+	check.Equal(artists, fetchedArtists)
 }

@@ -12,19 +12,19 @@ type Album struct {
 }
 
 type AlbumDetailed struct {
-	Id            int
-	Title         string
-	Type          string
-	Genre         Genre
-	CoverImageUrl string
-	ReleaseDate   time.Time
-	Songs         []ListedSong
+	Id            int          `json:"id"`
+	Title         string       `json:"title"`
+	Type          string       `json:"type"`
+	Genre         Genre        `json:"genre"`
+	CoverImageUrl string       `json:"cover_image_url"`
+	ReleaseDate   time.Time    `json:"release_date"`
+	Songs         []ListedSong `json:"songs"`
 }
 
 type AlbumPreview struct {
-	Id            int
-	Title         string
-	Type          string
-	CoverImageUrl string
-	ReleaseDate   time.Time
+	Id            int       `json:"id"`
+	Title         string    `json:"title"`
+	Type          string    `json:"type"`
+	CoverImageUrl string    `json:"cover_image_url"`
+	ReleaseDate   time.Time `json:"release_date"`
 }

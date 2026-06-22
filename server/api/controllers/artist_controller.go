@@ -54,6 +54,24 @@ func (ac *ArtistController) GetArtist(c *gin.Context) {
 	c.JSON(http.StatusOK, artistDTO)
 }
 
+func (ac *ArtistController) GetAllArtist(c *gin.Context) {
+	artists, err := ac.service.GetAllArtist()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "could not get artists details",
+		})
+		return
+	}
+	artistsDTO, err := mapping.ArtistListToDTO(ac.encoder, artists)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "could not get artists details",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, artistsDTO)
+}
+
 func (ac *ArtistController) GetArtistAlbumPreviews(c *gin.Context) {
 	hashID := c.Param("id")
 	id, err := ac.encoder.Decode(hashID)

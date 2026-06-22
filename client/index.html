@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crescendo Player</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="header-title">
+        <img src="https://data.chpic.su/stickers/f/FrutigerAero_xkysluv/FrutigerAero_xkysluv_006.webp?v=1750862291"
+            alt="Crescendo Icon">
+        Crescendo Music
+    </div>
+
+    <section id="auth-section">
+        <h2>Autenticación</h2>
+
+        <div class="auth-container">
+            <form id="login-form" class="auth-form">
+                <h3>Login</h3>
+                <input type="text" id="log-username" placeholder="Usuario o Email" required>
+                <input type="password" id="log-password" placeholder="Contraseña" required>
+                <button type="submit">Entrar</button>
+                <p id="log-msg"></p>
+            </form>
+
+            <form id="register-form" class="auth-form register-form">
+                <h3>Registro Nuevo</h3>
+                <input type="text" id="reg-username" placeholder="Usuario" required>
+                <input type="email" id="reg-email" placeholder="Email" required>
+                <input type="password" id="reg-password" placeholder="Contraseña" required>
+                <input type="date" id="reg-dob" required>
+                <button type="submit">Registrarse</button>
+                <p id="reg-msg"></p>
+            </form>
+        </div>
+    </section>
+
+    <section id="app-section" class="hidden">
+        <div class="catalog-header">
+            <h2>Catálogo</h2>
+            <button id="logout-btn">Cerrar Sesión</button>
+        </div>
+
+        <div class="search-box">
+            <p class="search-title">
+                <b>🔍 Buscar Artistas, Álbumes o Canciones</b>
+            </p>
+
+            <form id="global-search-form" class="search-form">
+                <input
+                    type="text"
+                    id="search-query"
+                    class="search-input"
+                    placeholder="Escribe el nombre de un artista, álbum o canción..."
+                    required>
+
+                <button type="submit" class="search-button">
+                    Buscar
+                </button>
+            </form>
+        </div>
+
+        <div id="search-results">
+            <div id="artist-results"></div>
+            <div id="album-results" class="results-section"></div>
+            <div id="song-results" class="results-section"></div>
+        </div>
+    </section>
+
+    <section id="player-section" class="hidden">
+        <div class="player-header">
+            <div>
+                <h3>Reproduciendo ahora</h3>
+                <div id="now-playing-title">
+                    Selecciona una canción...
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <button id="btn-prev" class="player-btn" title="Anterior">⏮</button>
+                <button id="btn-next" class="player-btn" title="Siguiente">⏭</button>
+                <button id="btn-random" class="player-btn" title="Aleatorio (Desactivado)">🔀</button>
+                <button id="btn-loop" class="player-btn" title="Repetir (Ninguno)">🔁</button>
+            </div>
+        </div>
+
+        <audio
+            id="audio-player"
+            class="audio-player"
+            controls
+            autoplay>
+        </audio>
+    </section>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+
+</html>

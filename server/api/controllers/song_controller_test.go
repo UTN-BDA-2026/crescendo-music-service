@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"crescendo-api/config/app"
+	"crescendo-api/config/env"
 	"crescendo-api/controllers"
 	"crescendo-api/mapping"
 	"crescendo-api/models"
@@ -18,9 +19,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	env.Load()
+}
+
 type MockSongService struct{}
 
-func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
+func (m *MockSongService) GetSongPlaybackInfo(song_id int) (models.PlaybackData, error) {
 	return models.PlaybackData{
 		SongPreviewWithArtists: models.SongPreviewWithArtists{
 			Id:       4,
@@ -39,7 +44,7 @@ func (m *MockUserService) GetSongPlaybackInfo(song_id int) (models.PlaybackData,
 
 func TestCanProvidSongPlaybackInfo(t *testing.T) {
 	check := require.New(t)
-	service := &MockUserService{}
+	service := &MockSongService{}
 	sq, err := sqids.New(sqids.Options{
 		Alphabet:  os.Getenv("SQID_ALPHABET"),
 		MinLength: 6,
@@ -48,8 +53,11 @@ func TestCanProvidSongPlaybackInfo(t *testing.T) {
 	testRouter := router.NewRouter(&app.Container{
 		Song: controllers.NewSongController(service, sqEncoder),
 	})
+	token, err := security.GenerateLoginToken(1, "testuser")
+	check.NoError(err)
 	hashedId, err := sq.Encode([]uint64{uint64(4)})
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/songs/%s/playback", hashedId), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	check.NoError(err)
 	w := httptest.NewRecorder()
 	testRouter.ServeHTTP(w, req)

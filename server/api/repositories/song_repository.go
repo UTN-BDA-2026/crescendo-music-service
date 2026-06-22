@@ -13,6 +13,7 @@ type SongRepository interface {
 	Delete(id int) error
 	AddArtistToSong(artistId int, songId int) error
 	GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLabel, error)
+	FindByNameLike(name string) ([]models.SongPreviewWithArtists, error)
 }
 
 type songRepository struct {
@@ -188,4 +189,77 @@ func (r songRepository) GetArtistsForPlaybackBySongId(id int) ([]models.ArtistLa
 	}
 
 	return artists, nil
+}
+
+func (r songRepository) FindByNameLike(name string) ([]models.SongPreviewWithArtists, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			s.id,
+			s.title,
+			s.duration,
+			a.id,
+			a.name
+		FROM songs s
+		JOIN artists_songs ars ON ars.song_id = s.id
+		JOIN artists a ON a.id = ars.artist_id
+		WHERE s.title ILIKE '%' || $1 || '%'
+		ORDER BY similarity(s.title, $1) DESC
+		LIMIT 20
+	`, name)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	songsMap := make(map[int]*models.SongPreviewWithArtists)
+
+	for rows.Next() {
+		var (
+			songID     int
+			title      string
+			duration   int
+			artistID   int
+			artistName string
+		)
+
+		err := rows.Scan(
+			&songID,
+			&title,
+			&duration,
+			&artistID,
+			&artistName,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		song, exists := songsMap[songID]
+		if !exists {
+			song = &models.SongPreviewWithArtists{
+				Id:       songID,
+				Title:    title,
+				Duration: duration,
+				Artists:  []models.ArtistLabel{},
+			}
+			songsMap[songID] = song
+		}
+
+		song.Artists = append(song.Artists, models.ArtistLabel{
+			Id:   artistID,
+			Name: artistName,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	songs := make([]models.SongPreviewWithArtists, 0, len(songsMap))
+
+	for _, song := range songsMap {
+		songs = append(songs, *song)
+	}
+
+	return songs, nil
 }

@@ -258,3 +258,47 @@ func TestSongArtistRelationship(t *testing.T) {
 		check.Len(artistList, 1)
 	})
 }
+
+func TestArtistRepository_FindByNameLike(t *testing.T) {
+	db, err := database.NewConnection()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		db.Close()
+	})
+
+	transaction, err := db.Begin()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		transaction.Rollback()
+	})
+
+	repository := repositories.NewArtistRepository(transaction)
+
+	reference := models.Artist{
+		Name:        "Metallica",
+		Information: "American heavy metal band",
+		ImageUrl:    "metallica.png",
+	}
+
+	id, err := repository.Create(reference)
+	require.NoError(t, err)
+	reference.Id = id
+
+	results, err := repository.FindByNameLike("Metal")
+	require.NoError(t, err)
+	require.NotEmpty(t, results)
+
+	found := false
+
+	for _, artist := range results {
+		if artist.Id == reference.Id {
+			require.Equal(t, reference, artist)
+			found = true
+			break
+		}
+	}
+
+	require.True(t, found, "expected artist to be returned by partial search")
+}

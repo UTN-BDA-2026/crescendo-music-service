@@ -1,0 +1,227 @@
+@import url('https://fonts.cdnfonts.com/css/futury');
+@import url('https://fonts.cdnfonts.com/css/cybercrime-2004');
+
+body {
+    font-family: 'Futury', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    background: url('https://i.pinimg.com/1200x/a4/77/ef/a477eff3d2fa525fda1bab66f23d637a.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #1a365d;
+}
+
+section {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 16px;
+    box-shadow:
+        0 8px 32px rgba(31, 38, 135, 0.15),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.hidden {
+    display: none;
+}
+
+button {
+    background: linear-gradient(180deg, #e0f2fe 0%, #38bdf8 50%, #0284c7 100%);
+    color: white;
+    border: 1px solid #0369a1;
+    padding: 8px 18px;
+    margin-top: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    box-shadow:
+        inset 0 2px 4px rgba(255,255,255,.8),
+        0 4px 6px rgba(0,0,0,.15);
+    transition: all .2s ease;
+}
+
+button:hover {
+    background: linear-gradient(180deg,#f0f9ff 0%,#7dd3fc 50%,#0ea5e9 100%);
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+input {
+    padding: 10px;
+    margin: 6px 0;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.8);
+    background: rgba(255,255,255,.7);
+}
+
+input:focus {
+    outline: none;
+    border-color: #38bdf8;
+}
+
+.song-item {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px;
+    border-bottom:1px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.3);
+    border-radius:10px;
+}
+
+#player-section {
+    background:
+        linear-gradient(
+            135deg,
+            rgba(2,132,199,.85),
+            rgba(30,58,138,.95)
+        );
+    color:white;
+    position:sticky;
+    bottom:20px;
+    border-radius:16px;
+}
+
+#player-section h3 {
+    color:#bae6fd;
+    text-transform:uppercase;
+}
+
+#now-playing-title {
+    color:white;
+    font-size:1.4em;
+    font-weight:bold;
+}
+
+.header-title {
+    display:flex;
+    align-items:center;
+    gap:15px;
+    color:white;
+    font-size:2.2em;
+    margin-bottom:20px;
+    font-family:'Cybercrime 2004',sans-serif;
+}
+
+.header-title img {
+    width:48px;
+    height:48px;
+}
+
+.glass-card {
+    background:rgba(255,255,255,.4);
+    backdrop-filter:blur(8px);
+    border-radius:12px;
+    padding:15px;
+    margin-bottom: 12px;
+}
+
+audio {
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.2));
+}
+
+#logout-btn {
+    background:linear-gradient(180deg,#fecaca,#ef4444,#b91c1c);
+}
+
+.play-btn {
+    background:linear-gradient(180deg,#d1fae5,#10b981,#047857);
+}
+
+#player-section button {
+    border-radius:50%;
+    width:40px;
+    height:40px;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.auth-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.auth-form {
+    flex: 1;
+    min-width: 250px;
+}
+
+.register-form {
+    border-left: 1px solid #eee;
+    padding-left: 20px;
+}
+
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-box {
+    background: #f3f4f6;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.search-title {
+    margin-top: 0;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1;
+}
+
+.search-button {
+    margin: 0;
+}
+
+.results-section {
+    margin-top: 20px;
+}
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.player-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.player-btn {
+    background: #374151 !important;
+}
+
+.audio-player {
+    width: 100%;
+    margin-top: 15px;
+}
+
+#log-msg {
+    color: red;
+    font-size: 0.9em;
+}
+
+#reg-msg {
+    font-size: 0.9em;
+}

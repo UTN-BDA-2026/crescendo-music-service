@@ -1,0 +1,18 @@
+http:
+  routers:
+    traefik:
+      rule: "Host(`traefik.crescendo.localhost`)"
+      service: "api@internal"
+      tls:
+        domains:
+          - main: "crescendo.localhost"
+            sans:
+              - "*.crescendo.localhost"
+          - main: "crescendo.local"
+            sans:
+              - "*.crescendo.local"
+
+tls:
+  certificates:
+    - certFile: "/etc/certs/cert.pem"
+      keyFile: "/etc/certs/key.pem"
