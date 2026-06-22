@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -107,9 +109,35 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 		return
 	}
 
+	rangeHeader := c.GetHeader("Range")
+
 	if sc.Bucket == nil {
+		simulatedData := []byte("Simulated Audio Stream")
+		fileSize := int64(len(simulatedData))
+
+		if rangeHeader != "" && strings.HasPrefix(rangeHeader, "bytes=") {
+			ranges := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
+			start, _ := strconv.ParseInt(ranges[0], 10, 64)
+			end := fileSize - 1
+			if len(ranges) > 1 && ranges[1] != "" {
+				parsedEnd, err := strconv.ParseInt(ranges[1], 10, 64)
+				if err == nil && parsedEnd < fileSize {
+					end = parsedEnd
+				} else if parsedEnd >= fileSize {
+					end = fileSize - 1
+				}
+			}
+
+			contentLength := end - start + 1
+			c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+			c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+			c.Status(http.StatusPartialContent)
+			c.Writer.Write(simulatedData[start : end+1])
+			return
+		}
+
 		c.Status(http.StatusOK)
-		c.Writer.Write([]byte("Simulated Audio Stream"))
+		c.Writer.Write(simulatedData)
 		return
 	}
 
@@ -138,8 +166,42 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 
 	c.Header("Content-Type", contentType)
 	c.Header("Accept-Ranges", "bytes")
-	c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
 
+	if rangeHeader != "" && strings.HasPrefix(rangeHeader, "bytes=") {
+		ranges := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
+		start, err := strconv.ParseInt(ranges[0], 10, 64)
+		if err != nil {
+			c.Status(http.StatusRequestedRangeNotSatisfiable)
+			return
+		}
+
+		end := fileSize - 1
+		if len(ranges) > 1 && ranges[1] != "" {
+			parsedEnd, err := strconv.ParseInt(ranges[1], 10, 64)
+			if err == nil && parsedEnd < fileSize {
+				end = parsedEnd
+			} else if err == nil && parsedEnd >= fileSize {
+				end = fileSize - 1
+			}
+		}
+
+		if start > end || start >= fileSize {
+			c.Status(http.StatusRequestedRangeNotSatisfiable)
+			return
+		}
+
+		contentLength := end - start + 1
+
+		c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+		c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+		c.Status(http.StatusPartialContent)
+
+		downloadStream.Skip(start)
+		io.Copy(c.Writer, io.LimitReader(downloadStream, contentLength))
+		return
+	}
+
+	c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
 	c.Status(http.StatusOK)
 
 	io.Copy(c.Writer, downloadStream)
