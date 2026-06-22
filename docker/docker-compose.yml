@@ -6,7 +6,7 @@ services:
         container_name: traefik
         restart: unless-stopped
         environment:
-        - DOCKER_API_VERSION=1.43
+            - DOCKER_API_VERSION=1.43
         security_opt:
             - no-new-privileges:true
         ports:
@@ -16,7 +16,7 @@ services:
             - ${MONGODB_PORT}:${MONGODB_PORT}
             - ${POSTGRES_PORT}:${POSTGRES_PORT}
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:ro
             - ./config/traefik.yml:/etc/traefik/traefik.yml:ro
             - ./config/config.yml:/etc/traefik/config.yml:ro
             - ./certs:/etc/certs:ro
@@ -28,9 +28,7 @@ services:
     cert-init:
         image: alpine:3.22
         command: >
-            sh -c "
-            mkdir -p /certs &&
-            if [ ! -f /certs/ca.crt ]; then
+            sh -c " mkdir -p /certs && if [ ! -f /certs/ca.crt ]; then
                 apk add --no-cache openssl;
 
                 echo 'Generating CA...';
@@ -53,8 +51,7 @@ services:
 
                 chmod 600 /certs/server.key;
 
-            fi
-            "
+            fi "
         volumes:
             - postgres-certs:/certs
         restart: "no"
@@ -90,7 +87,7 @@ services:
             - postgres-certs:/certs:ro
         restart: always
         healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+            test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
             interval: 5s
             timeout: 5s
             retries: 10
@@ -112,19 +109,7 @@ services:
             - "traefik.tcp.routers.mongodb.entrypoints=mongodb"
             - "traefik.tcp.services.mongodb.loadbalancer.server.port=27017"
         healthcheck:
-            test:
-                [
-                    "CMD",
-                    "mongosh",
-                    "-u",
-                    "${MONGODB_USER:-admin}",
-                    "-p",
-                    "${MONGODB_PASSWORD:-admin123}",
-                    "--authenticationDatabase",
-                    "admin",
-                    "--eval",
-                    "db.adminCommand('ping')"
-                ]
+            test: [ "CMD", "mongosh", "-u", "${MONGODB_USER:-admin}", "-p", "${MONGODB_PASSWORD:-admin123}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')" ]
             interval: 5s
             timeout: 5s
             retries: 10
@@ -139,6 +124,9 @@ services:
             - MONGODB_PORT=${MONGODB_PORT:-27017}
             - MONGODB_USER=${MONGODB_USER:-admin}
             - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
+            - CACHE_HOST=${CACHE_HOST:-dragonfly}
+            - CACHE_PORT=${CACHE_PORT:-6379}
+            - CACHE_PASSWORD=${CACHE_PASSWORD:-}
             - JWT_SECRET=${JWT_SECRET}
         networks:
             web-net:
@@ -159,10 +147,12 @@ services:
             - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=ResponseCodeRatio(500, 600, 0, 600) > 0.25"
             - "traefik.http.middlewares.crescendo-streaming.circuitbreaker.expression=NetworkErrorRatio() > 0.5"
             # Red
-            - "traefik.docker.network=web-net" 
+            - "traefik.docker.network=web-net"
         depends_on:
             mongodb:
                 condition: service_healthy
+            dragonfly:
+                condition: service_started
         restart: always
 
     crescendo-api:
@@ -177,9 +167,9 @@ services:
             - POSTGRES_DB=${POSTGRES_DB}
             - POSTGRES_SSL_MODE=verify-full
             - POSTGRES_SSL_ROOT_CERT=/certs/ca.crt
-            - CACHE_HOST=${CACHE_HOST}
-            - CACHE_PORT=${CACHE_PORT}
-            - CACHE_PASSWORD=${CACHE_PASSWORD}
+            - CACHE_HOST=${CACHE_HOST:-dragonfly}
+            - CACHE_PORT=${CACHE_PORT:-6379}
+            - CACHE_PASSWORD=${CACHE_PASSWORD:-}
             - SQID_ALPHABET=${SQID_ALPHABET}
             - JWT_SECRET=${JWT_SECRET:-secret-key}
             - BASE_URL=${BASE_URL:-http://crescendo-streaming:${STREAMING_SERVICE_PORT:-8081}}
@@ -204,7 +194,7 @@ services:
             - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=ResponseCodeRatio(500, 600, 0, 600) > 0.25"
             - "traefik.http.middlewares.crescendo-api.circuitbreaker.expression=NetworkErrorRatio() > 0.5"
             # Red
-            - "traefik.docker.network=web-net"  
+            - "traefik.docker.network=web-net"
         depends_on:
             postgresql:
                 condition: service_healthy
@@ -218,11 +208,11 @@ services:
         networks:
             - web-net
         labels:
-        - "traefik.enable=true"
-        - "traefik.tcp.routers.dragonfly.rule=HostSNI(`*`)"
-        - "traefik.tcp.routers.dragonfly.entrypoints=redis"
-        - "traefik.tcp.routers.dragonfly.service=dragonfly"
-        - "traefik.tcp.services.dragonfly.loadbalancer.server.port=6379"
+            - "traefik.enable=true"
+            - "traefik.tcp.routers.dragonfly.rule=HostSNI(`*`)"
+            - "traefik.tcp.routers.dragonfly.entrypoints=redis"
+            - "traefik.tcp.routers.dragonfly.service=dragonfly"
+            - "traefik.tcp.services.dragonfly.loadbalancer.server.port=6379"
         volumes:
             - dragonfly-data:/data
         ulimits:
@@ -278,5 +268,5 @@ volumes:
     dragonfly-data:
     postgres-certs:
 networks:
-  web-net:
-    name: web-net
+    web-net:
+        name: web-net
