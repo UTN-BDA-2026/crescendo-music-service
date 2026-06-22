@@ -1,12 +1,13 @@
 package controllers
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
 	"crescendo-streaming/repositories"
 
@@ -116,30 +117,40 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 		return
 	}
 
-	songIDStr := ""
-	if songID, ok := claims["song_id"].(string); ok {
-		songIDStr = songID
+	if _, ok := claims["song_id"].(string); !ok {
+		// Just validate it's present or not if we need it later, but we don't use songIDStr in StreamAudio anymore.
 	}
+
+	rangeHeader := c.GetHeader("Range")
 
 	if sc.Bucket == nil {
-		c.Status(http.StatusOK)
-		c.Writer.Write([]byte("Simulated Audio Stream"))
-		return
-	}
+		simulatedData := []byte("Simulated Audio Stream")
+		fileSize := int64(len(simulatedData))
 
-	ctx := context.Background()
+		if rangeHeader != "" && strings.HasPrefix(rangeHeader, "bytes=") {
+			ranges := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
+			start, _ := strconv.ParseInt(ranges[0], 10, 64)
+			end := fileSize - 1
+			if len(ranges) > 1 && ranges[1] != "" {
+				parsedEnd, err := strconv.ParseInt(ranges[1], 10, 64)
+				if err == nil && parsedEnd < fileSize {
+					end = parsedEnd
+				} else if parsedEnd >= fileSize {
+					end = fileSize - 1
+				}
+			}
 
-	// Try to get from cache first
-	if sc.Cache != nil {
-		cachedStream, err := sc.Cache.GetAudioCache(ctx, fileIDStr)
-		if err == nil && cachedStream != nil {
-			c.Header("Content-Type", "audio/mpeg")
-			c.Header("Accept-Ranges", "bytes")
-			c.Status(http.StatusOK)
-			io.Copy(c.Writer, cachedStream)
-			cachedStream.Close()
+			contentLength := end - start + 1
+			c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+			c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+			c.Status(http.StatusPartialContent)
+			c.Writer.Write(simulatedData[start : end+1])
 			return
 		}
+
+		c.Status(http.StatusOK)
+		c.Writer.Write(simulatedData)
+		return
 	}
 
 	// Get from MongoDB GridFS
@@ -168,28 +179,45 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 
 	c.Header("Content-Type", contentType)
 	c.Header("Accept-Ranges", "bytes")
-	c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
 
+	if rangeHeader != "" && strings.HasPrefix(rangeHeader, "bytes=") {
+		ranges := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
+		start, err := strconv.ParseInt(ranges[0], 10, 64)
+		if err != nil {
+			c.Status(http.StatusRequestedRangeNotSatisfiable)
+			return
+		}
+
+		end := fileSize - 1
+		if len(ranges) > 1 && ranges[1] != "" {
+			parsedEnd, err := strconv.ParseInt(ranges[1], 10, 64)
+			if err == nil && parsedEnd < fileSize {
+				end = parsedEnd
+			} else if err == nil && parsedEnd >= fileSize {
+				end = fileSize - 1
+			}
+		}
+
+		if start > end || start >= fileSize {
+			c.Status(http.StatusRequestedRangeNotSatisfiable)
+			return
+		}
+
+		contentLength := end - start + 1
+
+		c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+		c.Header("Content-Length", fmt.Sprintf("%d", contentLength))
+		c.Status(http.StatusPartialContent)
+
+		downloadStream.Skip(start)
+		io.Copy(c.Writer, io.LimitReader(downloadStream, contentLength))
+		return
+	}
+
+	c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
 	c.Status(http.StatusOK)
 
-	// Stream to client while simultaneously caching
-	if sc.Cache != nil && songIDStr != "" {
-		// Read all data from stream
-		data, err := io.ReadAll(downloadStream)
-		if err == nil {
-			// Try to cache in background (non-blocking)
-			go func() {
-				cacheStream := io.NopCloser(bytes.NewReader(data))
-				_ = sc.Cache.SetAudioCache(context.Background(), fileIDStr, cacheStream)
-			}()
-			// Write to client
-			c.Writer.Write(data)
-		} else {
-			io.Copy(c.Writer, downloadStream)
-		}
-	} else {
-		io.Copy(c.Writer, downloadStream)
-	}
+	io.Copy(c.Writer, downloadStream)
 }
 
 // PauseStream handles pause requests for playback
