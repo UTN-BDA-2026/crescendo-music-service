@@ -86,17 +86,20 @@ input:focus {
     color: white;
     position: sticky;
     bottom: 20px;
-    border-radius: 16px;
+    border-radius: 10px;
+    padding: 10px 18px;
 }
 
 #player-section h3 {
     color: #bae6fd;
     text-transform: uppercase;
+    font-size: 0.75em;
+    margin: 0 0 4px 0;
 }
 
 #now-playing-title {
     color: white;
-    font-size: 1.4em;
+    font-size: 1em;
     font-weight: bold;
 }
 
@@ -137,12 +140,14 @@ audio {
 
 #player-section button {
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.9em;
+    margin-top: 0;
 }
 
 .auth-container {
@@ -198,7 +203,7 @@ audio {
 .player-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .player-controls {
@@ -212,7 +217,8 @@ audio {
 
 .audio-player {
     width: 100%;
-    margin-top: 15px;
+    margin-top: 10px;
+    height: 36px;
 }
 
 #log-msg {

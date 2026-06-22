@@ -1,10 +1,11 @@
 import { API_BASE_URL } from '../config/api.js';
+import { showArtistView } from '../ui/views.js';
 
 let queue = [];
 let index = -1;
 
 let isRandom = false;
-let loopMode = 'none'; // none | all | one
+let loopMode = 'none';
 
 export function playQueue(songsArray, startIndex = 0) {
     if (!songsArray || songsArray.length === 0) return;
@@ -43,12 +44,19 @@ async function playCurrentSong() {
         const titleEl = document.getElementById('now-playing-title');
         const audioEl = document.getElementById('audio-player');
 
-        const artistNames =
-            data.artists?.length
-                ? data.artists.map(a => a.name).join(', ')
-                : 'Desconocido';
+        const artistLinksHTML = data.artists?.length
+            ? data.artists.map(a => `<a href="#" class="player-artist-link" data-id="${a.id}" style="color: inherit; text-decoration: underline; cursor: pointer;">${a.name}</a>`).join(', ')
+            : 'Desconocido';
 
-        titleEl.innerText = `${data.title} - ${artistNames}`;
+        titleEl.innerHTML = `${data.title} - ${artistLinksHTML}`;
+
+        const artistLinks = titleEl.querySelectorAll('.player-artist-link');
+        artistLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showArtistView(link.getAttribute('data-id'));
+            });
+        });
 
         audioEl.src = data.stream_url;
         audioEl.play();

@@ -1,6 +1,6 @@
 import { API_BASE_URL } from '../config/api.js';
 import { playQueue } from '../player/player.js';
-import { showAlbumView } from '../ui/views.js';
+import { showAlbumView, showArtistView } from '../ui/views.js';
 
 export function initSearch() {
     document.getElementById('global-search-form')?.addEventListener('submit', handleSearch);
@@ -65,7 +65,7 @@ function renderArtists(artists) {
         div.innerHTML = `
             <div class="card-content">
                 ${artist.image_url ? `
-                    <img src="${artist.image_url}" 
+                    <img src="${artist.image_url}" referrerpolicy="no-referrer"
                          alt="${artist.name}"
                          class="artist-img">
                 ` : ''}
@@ -80,6 +80,9 @@ function renderArtists(artists) {
                 </div>
             </div>
         `;
+
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => showArtistView(artist.id));
 
         container.appendChild(div);
     });
@@ -104,7 +107,7 @@ function renderAlbums(albums) {
         div.innerHTML = `
             <div class="card-content">
                 ${album.cover_image_url ? `
-                    <img src="${album.cover_image_url}"
+                    <img src="${album.cover_image_url}" referrerpolicy="no-referrer"
                          alt="${album.title}"
                          class="album-img">
                 ` : ''}
@@ -123,7 +126,7 @@ function renderAlbums(albums) {
                 </div>
             </div>
         `;
-        
+
         div.style.cursor = 'pointer';
         div.addEventListener('click', () => showAlbumView(album.id));
 
@@ -150,8 +153,8 @@ function renderSongs(songs) {
         const m = Math.floor(song.duration / 60);
         const s = (song.duration % 60).toString().padStart(2, '0');
 
-        const artistNames = song.artists?.length
-            ? song.artists.map(a => a.name).join(', ')
+        const artistLinksHTML = song.artists?.length
+            ? song.artists.map(a => `<a href="#" class="artist-link" data-id="${a.id}" style="color: inherit; text-decoration: underline; cursor: pointer;">${a.name}</a>`).join(', ')
             : 'Desconocido';
 
         div.innerHTML = `
@@ -161,7 +164,7 @@ function renderSongs(songs) {
                 </strong>
 
                 <span class="song-artist">
-                    - ${artistNames}
+                    - ${artistLinksHTML}
                 </span>
 
                 <div class="song-duration">
@@ -169,6 +172,14 @@ function renderSongs(songs) {
                 </div>
             </div>
         `;
+
+        const artistLinks = div.querySelectorAll('.artist-link');
+        artistLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showArtistView(link.getAttribute('data-id'));
+            });
+        });
 
         const btn = document.createElement('button');
         btn.textContent = '▶ Play';
