@@ -316,3 +316,40 @@ audio {
 .msg-error {
     color: red;
 }
+
+
+.detail-header {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+
+.detail-img {
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.detail-info h2 {
+    margin: 0 0 10px 0;
+    font-size: 2em;
+    color: #111827;
+}
+
+.detail-info p {
+    margin: 5px 0;
+    color: #4b5563;
+}
+
+.back-btn {
+    margin-bottom: 15px;
+}
+
+.track-number {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #6b7280;
+}

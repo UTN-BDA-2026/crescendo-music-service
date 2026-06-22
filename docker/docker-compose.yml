@@ -231,7 +231,7 @@ services:
         memswap_limit: 4g
         environment:
             - CACHE_PASSWORD=${CACHE_PASSWORD}
-        command: dragonfly --maxmemory 1gb --requirepass ${CACHE_PASSWORD} --bind 0.0.0.0
+        command: dragonfly --maxmemory 1gb --requirepass ${CACHE_PASSWORD} --bind 0.0.0.0 --proactor_threads=4
 
     seed:
         image: crescendo-seed:1.0.0

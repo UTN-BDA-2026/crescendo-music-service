@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config/api.js';
 import { playQueue } from '../player/player.js';
+import { showAlbumView } from '../ui/views.js';
 
 export function initSearch() {
     document.getElementById('global-search-form')?.addEventListener('submit', handleSearch);
@@ -122,6 +123,9 @@ function renderAlbums(albums) {
                 </div>
             </div>
         `;
+        
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => showAlbumView(album.id));
 
         container.appendChild(div);
     });
