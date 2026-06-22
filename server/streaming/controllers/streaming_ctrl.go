@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"crescendo-streaming/repositories"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,10 +21,15 @@ import (
 
 type StreamingController struct {
 	Bucket *gridfs.Bucket
+	Cache  *repositories.CacheRepository
 }
 
 func NewStreamingController(bucket *gridfs.Bucket) *StreamingController {
 	return &StreamingController{Bucket: bucket}
+}
+
+func NewStreamingControllerWithCache(bucket *gridfs.Bucket, cache *repositories.CacheRepository) *StreamingController {
+	return &StreamingController{Bucket: bucket, Cache: cache}
 }
 
 func (sc *StreamingController) UploadAudio(c *gin.Context) {
@@ -109,6 +117,10 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 		return
 	}
 
+	if _, ok := claims["song_id"].(string); !ok {
+		// Just validate it's present or not if we need it later, but we don't use songIDStr in StreamAudio anymore.
+	}
+
 	rangeHeader := c.GetHeader("Range")
 
 	if sc.Bucket == nil {
@@ -141,6 +153,7 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 		return
 	}
 
+	// Get from MongoDB GridFS
 	fileID, err := primitive.ObjectIDFromHex(fileIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file ID"})
@@ -205,4 +218,132 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 	c.Status(http.StatusOK)
 
 	io.Copy(c.Writer, downloadStream)
+}
+
+// PauseStream handles pause requests for playback
+// Expects POST request with song_id and optional position (in milliseconds)
+func (sc *StreamingController) PauseStream(c *gin.Context) {
+	tokenString := c.Query("token")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+		return
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured on server"})
+		return
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims format"})
+		return
+	}
+
+	songIDStr, ok := claims["song_id"].(string)
+	if !ok || songIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token missing song_id"})
+		return
+	}
+
+	// Get position from request body
+	var req struct {
+		Position int64 `json:"position"`
+	}
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	if req.Position < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Position cannot be negative"})
+		return
+	}
+
+	ctx := context.Background()
+
+	// Store pause state in cache
+	if sc.Cache != nil {
+		if err := sc.Cache.SetStreamingState(ctx, songIDStr, req.Position); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save playback state"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Playback paused",
+		"song_id":  songIDStr,
+		"position": req.Position,
+	})
+}
+
+// ResumeStream handles resume requests for playback
+// Retrieves the last known position for a song
+func (sc *StreamingController) ResumeStream(c *gin.Context) {
+	tokenString := c.Query("token")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
+		return
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured on server"})
+		return
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims format"})
+		return
+	}
+
+	songIDStr, ok := claims["song_id"].(string)
+	if !ok || songIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token missing song_id"})
+		return
+	}
+
+	ctx := context.Background()
+
+	// Retrieve last known position
+	var position int64 = 0
+	if sc.Cache != nil {
+		pos, err := sc.Cache.GetStreamingState(ctx, songIDStr)
+		if err == nil {
+			position = pos
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Resume information retrieved",
+		"song_id":  songIDStr,
+		"position": position,
+	})
 }

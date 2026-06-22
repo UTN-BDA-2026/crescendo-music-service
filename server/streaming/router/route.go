@@ -36,6 +36,8 @@ func SetupRouter(ctrl *controllers.StreamingController) *gin.Engine {
 	if ctrl != nil {
 		r.POST("/upload", ctrl.UploadAudio)
 		r.GET("/stream", ctrl.StreamAudio)
+		r.POST("/pause", ctrl.PauseStream)
+		r.GET("/resume", ctrl.ResumeStream)
 	}
 
 	return r

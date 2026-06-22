@@ -129,6 +129,7 @@ services:
             timeout: 5s
             retries: 10
 
+
     crescendo-streaming:
         image: crescendo-streaming:1.0.0
         build: ../server/streaming
@@ -139,6 +140,9 @@ services:
             - MONGODB_PORT=${MONGODB_PORT:-27017}
             - MONGODB_USER=${MONGODB_USER:-admin}
             - MONGODB_PASSWORD=${MONGODB_PASSWORD:-admin123}
+            - CACHE_HOST=${CACHE_HOST:-dragonfly}
+            - CACHE_PORT=${CACHE_PORT:-6379}
+            - CACHE_PASSWORD=${CACHE_PASSWORD:-}
             - JWT_SECRET=${JWT_SECRET}
         networks:
             web-net:
@@ -163,6 +167,8 @@ services:
         depends_on:
             mongodb:
                 condition: service_healthy
+            dragonfly:
+                condition: service_started
         restart: always
 
     crescendo-api:
