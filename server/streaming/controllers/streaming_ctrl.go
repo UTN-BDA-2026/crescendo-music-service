@@ -118,7 +118,6 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 	}
 
 	if _, ok := claims["song_id"].(string); !ok {
-		// Just validate it's present or not if we need it later, but we don't use songIDStr in StreamAudio anymore.
 	}
 
 	rangeHeader := c.GetHeader("Range")
@@ -153,7 +152,6 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 		return
 	}
 
-	// Get from MongoDB GridFS
 	fileID, err := primitive.ObjectIDFromHex(fileIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file ID"})
@@ -220,8 +218,6 @@ func (sc *StreamingController) StreamAudio(c *gin.Context) {
 	io.Copy(c.Writer, downloadStream)
 }
 
-// PauseStream handles pause requests for playback
-// Expects POST request with song_id and optional position (in milliseconds)
 func (sc *StreamingController) PauseStream(c *gin.Context) {
 	tokenString := c.Query("token")
 	if tokenString == "" {
@@ -259,7 +255,6 @@ func (sc *StreamingController) PauseStream(c *gin.Context) {
 		return
 	}
 
-	// Get position from request body
 	var req struct {
 		Position int64 `json:"position"`
 	}
@@ -276,7 +271,6 @@ func (sc *StreamingController) PauseStream(c *gin.Context) {
 
 	ctx := context.Background()
 
-	// Store pause state in cache
 	if sc.Cache != nil {
 		if err := sc.Cache.SetStreamingState(ctx, songIDStr, req.Position); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save playback state"})
@@ -291,8 +285,6 @@ func (sc *StreamingController) PauseStream(c *gin.Context) {
 	})
 }
 
-// ResumeStream handles resume requests for playback
-// Retrieves the last known position for a song
 func (sc *StreamingController) ResumeStream(c *gin.Context) {
 	tokenString := c.Query("token")
 	if tokenString == "" {
@@ -332,7 +324,6 @@ func (sc *StreamingController) ResumeStream(c *gin.Context) {
 
 	ctx := context.Background()
 
-	// Retrieve last known position
 	var position int64 = 0
 	if sc.Cache != nil {
 		pos, err := sc.Cache.GetStreamingState(ctx, songIDStr)

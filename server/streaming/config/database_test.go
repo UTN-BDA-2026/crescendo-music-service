@@ -23,7 +23,7 @@ func TestConnectDB(t *testing.T) {
 	dbPort := os.Getenv("MONGODB_PORT")
 
 	if dbHost == "" || dbPort == "" {
-		t.Skip("Skipping MongoDB connection test because required environment variables are not set")
+		t.Fatal("Missing required .env variables")
 	}
 
 	uri := fmt.Sprintf("mongodb://%s:%s@%s:%s", dbUser, dbPass, dbHost, dbPort)
