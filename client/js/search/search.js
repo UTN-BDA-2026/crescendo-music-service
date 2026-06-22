@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config/api.js';
 import { playQueue } from '../player/player.js';
+import { showAlbumView, showArtistView } from '../ui/views.js';
 
 export function initSearch() {
     document.getElementById('global-search-form')?.addEventListener('submit', handleSearch);
@@ -52,7 +53,7 @@ function renderArtists(artists) {
     if (!artists.length) return;
 
     container.innerHTML = `
-        <h3 style="margin-bottom:10px;color:#111827;">
+        <h3 class="section-title">
             Artistas
         </h3>
     `;
@@ -62,23 +63,26 @@ function renderArtists(artists) {
         div.className = 'glass-card';
 
         div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:20px;">
+            <div class="card-content">
                 ${artist.image_url ? `
-                    <img src="${artist.image_url}" 
+                    <img src="${artist.image_url}" referrerpolicy="no-referrer"
                          alt="${artist.name}"
-                         style="width:60px;height:60px;border-radius:50%;object-fit:cover;">
+                         class="artist-img">
                 ` : ''}
                 
                 <div>
-                    <h4 style="margin:0;font-size:1.2em;color:#111827;">
+                    <h4 class="card-title">
                         ${artist.name}
                     </h4>
-                    <p style="color:#6b7280;margin:5px 0 0 0;font-size:.9em;">
+                    <p class="card-subtitle">
                         ${artist.information || 'Sin información adicional'}
                     </p>
                 </div>
             </div>
         `;
+
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => showArtistView(artist.id));
 
         container.appendChild(div);
     });
@@ -91,7 +95,7 @@ function renderAlbums(albums) {
     if (!albums.length) return;
 
     container.innerHTML = `
-        <h3 style="margin-bottom:10px;color:#111827;">
+        <h3 class="section-title">
             Álbumes
         </h3>
     `;
@@ -101,32 +105,30 @@ function renderAlbums(albums) {
         div.className = 'glass-card';
 
         div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:20px;">
+            <div class="card-content">
                 ${album.cover_image_url ? `
-                    <img src="${album.cover_image_url}"
+                    <img src="${album.cover_image_url}" referrerpolicy="no-referrer"
                          alt="${album.title}"
-                         style="width:60px;height:60px;border-radius:4px;object-fit:cover;">
+                         class="album-img">
                 ` : ''}
 
                 <div>
-                    <h4 style="margin:0;font-size:1.2em;color:#111827;">
+                    <h4 class="card-title">
                         ${album.title}
-                        <span style="
-                            font-size:.7em;
-                            background:#e5e7eb;
-                            padding:2px 6px;
-                            border-radius:4px;
-                        ">
+                        <span class="badge">
                             ${album.type}
                         </span>
                     </h4>
 
-                    <p style="color:#6b7280;margin:5px 0 0 0;font-size:.9em;">
+                    <p class="card-subtitle">
                         Lanzamiento: ${new Date(album.release_date).toLocaleDateString()}
                     </p>
                 </div>
             </div>
         `;
+
+        div.style.cursor = 'pointer';
+        div.addEventListener('click', () => showAlbumView(album.id));
 
         container.appendChild(div);
     });
@@ -139,7 +141,7 @@ function renderSongs(songs) {
     if (!songs.length) return;
 
     container.innerHTML = `
-        <h3 style="margin-bottom:10px;color:#111827;">
+        <h3 class="section-title">
             Canciones
         </h3>
     `;
@@ -151,25 +153,33 @@ function renderSongs(songs) {
         const m = Math.floor(song.duration / 60);
         const s = (song.duration % 60).toString().padStart(2, '0');
 
-        const artistNames = song.artists?.length
-            ? song.artists.map(a => a.name).join(', ')
+        const artistLinksHTML = song.artists?.length
+            ? song.artists.map(a => `<a href="#" class="artist-link" data-id="${a.id}" style="color: inherit; text-decoration: underline; cursor: pointer;">${a.name}</a>`).join(', ')
             : 'Desconocido';
 
         div.innerHTML = `
             <div>
-                <strong style="color:#1f2937;font-size:1.1em;">
+                <strong class="song-title">
                     ${song.title}
                 </strong>
 
-                <span style="color:#4b5563;font-size:.9em;margin-left:5px;">
-                    - ${artistNames}
+                <span class="song-artist">
+                    - ${artistLinksHTML}
                 </span>
 
-                <div style="color:#6b7280;font-size:.85em;margin-top:4px;">
+                <div class="song-duration">
                     Duración: ${m}:${s}
                 </div>
             </div>
         `;
+
+        const artistLinks = div.querySelectorAll('.artist-link');
+        artistLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showArtistView(link.getAttribute('data-id'));
+            });
+        });
 
         const btn = document.createElement('button');
         btn.textContent = '▶ Play';
@@ -195,7 +205,7 @@ function renderEmptyState(query, data) {
         songData.length === 0
     ) {
         document.getElementById('artist-results').innerHTML =
-            `<p style="color:#6b7280;">
+            `<p class="empty-state-text">
                 No se encontraron resultados para "${query}".
             </p>`;
     }

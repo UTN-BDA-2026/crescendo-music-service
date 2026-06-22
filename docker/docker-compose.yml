@@ -208,6 +208,8 @@ services:
         depends_on:
             postgresql:
                 condition: service_healthy
+            dragonfly:
+                condition: service_started
         restart: always
 
     dragonfly:
@@ -225,9 +227,11 @@ services:
             - dragonfly-data:/data
         ulimits:
             memlock: -1
+        mem_limit: 4g
+        memswap_limit: 4g
         environment:
             - CACHE_PASSWORD=${CACHE_PASSWORD}
-        command: dragonfly --requirepass ${CACHE_PASSWORD}
+        command: dragonfly --maxmemory 1gb --requirepass ${CACHE_PASSWORD} --bind 0.0.0.0 --proactor_threads=4
 
     seed:
         image: crescendo-seed:1.0.0
