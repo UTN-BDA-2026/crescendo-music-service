@@ -102,7 +102,7 @@ Antes de iniciar el sistema:
 2. Copiar el archivo de ejemplo:
 
 ```bash
-cp .env.example .env
+cp .env-example .env
 ```
 
 3. Editar `.env` y configurar credenciales necesarias:
