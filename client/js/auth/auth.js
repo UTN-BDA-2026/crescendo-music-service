@@ -31,22 +31,28 @@ export function initAuth(updateAuthUI) {
             date_of_birth: reg('reg-dob') + "T00:00:00Z"
         };
 
-        const res = await fetch(`${API_BASE_URL}/users`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-
         const msg = document.getElementById('reg-msg');
 
-        if (res.ok) {
-            msg.textContent = "Usuario creado";
-            msg.style.color = "green";
-            e.target.reset();
-        } else {
-            const err = await res.json();
-            msg.textContent = err.error;
-            msg.style.color = "red";
+        try {
+            const res = await fetch(`${API_BASE_URL}/users`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                msg.textContent = "Usuario creado";
+                msg.className = "msg-success";
+                e.target.reset();
+            } else {
+                const err = await res.json();
+                msg.textContent = err.error || "Error en el registro";
+                msg.className = "msg-error";
+            }
+        } catch (networkErr) {
+            console.error('Register fetch error:', networkErr);
+            msg.textContent = "Error de conexión con el servidor";
+            msg.className = "msg-error";
         }
     });
 
@@ -63,22 +69,29 @@ export function initAuth(updateAuthUI) {
             password: val('log-password')
         };
 
-        const res = await fetch(`${API_BASE_URL}/users/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-
         const msg = document.getElementById('log-msg');
 
-        if (res.ok) {
-            const data = await res.json();
-            localStorage.setItem('crescendo_token', data.token);
-            msg.textContent = "";
-            updateAuthUI();
-        } else {
-            const err = await res.json();
-            msg.textContent = err.error;
+        try {
+            const res = await fetch(`${API_BASE_URL}/users/login`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem('crescendo_token', data.token);
+                msg.textContent = "";
+                updateAuthUI();
+            } else {
+                const err = await res.json();
+                msg.textContent = err.error || "Error en el login";
+                msg.className = "msg-error";
+            }
+        } catch (networkErr) {
+            console.error('Login fetch error:', networkErr);
+            msg.textContent = "Error de conexión con el servidor";
+            msg.className = "msg-error";
         }
     });
 }
